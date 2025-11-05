@@ -10,7 +10,7 @@ import { validateExpenseData, transformDataForDB, transformDataFromDB } from '@/
  * Crea un nuevo gasto
  * @param {Object} data - Datos del gasto
  * @param {number} data.amount - Monto del gasto
- * @param {string} [data.category_id] - ID de la categoría
+ * @param {string} data.category_id - ID de la categoría
  * @param {string} [data.description] - Descripción opcional
  * @param {string} [data.expense_date] - Fecha del gasto
  * @param {string} userId - ID del usuario autenticado

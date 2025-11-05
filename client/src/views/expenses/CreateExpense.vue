@@ -19,14 +19,42 @@
       />
 
       <!-- Categoría -->
-      <Select
-        v-model="form.category_id"
-        :options="categories"
-        label="Categoría"
-        placeholder="Sin categoría"
-        value-key="id"
-        label-key="name"
-      />
+      <div>
+        <Select
+          v-model="form.category_id"
+          :options="categories"
+          label="Categoría"
+          placeholder="Selecciona una categoría"
+          value-key="id"
+          label-key="name"
+          required
+          :error="errors.category"
+        />
+        
+        <!-- Mensaje cuando no hay categorías -->
+        <div v-if="!hasCategories" class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div class="flex items-start gap-2">
+            <Icon name="mdi:alert-circle" :size="20" class="text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div class="flex-1">
+              <p class="text-sm text-yellow-800 font-medium mb-1">
+                No tienes categorías creadas
+              </p>
+              <p class="text-xs text-yellow-700 mb-2">
+                Para registrar un gasto necesitas primero crear al menos una categoría.
+              </p>
+              <Button
+                variant="secondary"
+                icon="mdi:plus"
+                type="button"
+                @click="goToCategories"
+                class="text-sm px-3 py-1.5"
+              >
+                Crear Categoría
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Descripción -->
       <Textarea
@@ -78,6 +106,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useExpenses } from '@/composables/useExpenses'
 import { useCategories } from '@/composables/useCategories'
 import { validateExpenseData } from '@/modules/expenses'
@@ -87,11 +116,13 @@ import Modal from '@/components/UI/Modal.vue'
 import Input from '@/components/UI/Input.vue'
 import Select from '@/components/UI/Select.vue'
 import Textarea from '@/components/UI/Textarea.vue'
+import Icon from '@/components/UI/Icon.vue'
 
 const emit = defineEmits(['close', 'created'])
+const router = useRouter()
 
 const { createExpense } = useExpenses()
-const { categories, fetchCategories } = useCategories()
+const { categories, hasCategories, fetchCategories } = useCategories()
 
 const form = ref({
   amount: null,
@@ -103,12 +134,16 @@ const form = ref({
 const loading = ref(false)
 const errors = ref({
   amount: null,
+  category: null,
   description: null
 })
 
 // Validación visual para deshabilitar botón
 const isFormValid = computed(() => {
-  return form.value.amount > 0 && !loading.value
+  return form.value.amount > 0 && 
+         form.value.category_id && 
+         hasCategories.value && 
+         !loading.value
 })
 
 // Carga las categorías al montar
@@ -119,6 +154,7 @@ onMounted(async () => {
 const validateForm = () => {
   errors.value = {
     amount: null,
+    category: null,
     description: null
   }
   
@@ -128,6 +164,8 @@ const validateForm = () => {
     validation.errors.forEach(error => {
       if (error.includes('monto')) {
         errors.value.amount = error
+      } else if (error.includes('categoría')) {
+        errors.value.category = error
       } else if (error.includes('descripción')) {
         errors.value.description = error
       }
@@ -136,6 +174,11 @@ const validateForm = () => {
   }
   
   return true
+}
+
+const goToCategories = () => {
+  emit('close')
+  router.push('/categories')
 }
 
 const handleSubmit = async () => {

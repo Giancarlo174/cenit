@@ -16,6 +16,7 @@ export const VALIDATION_RULES = {
  * Valida los datos de un gasto
  * @param {Object} data - Datos del gasto
  * @param {number} data.amount - Monto del gasto
+ * @param {string} data.category_id - ID de la categoría
  * @param {string} [data.description] - Descripción opcional
  * @param {string} [data.expense_date] - Fecha del gasto
  * @returns {{isValid: boolean, errors: string[]}}
@@ -36,6 +37,11 @@ export const validateExpenseData = (data) => {
     errors.push(`El monto no puede exceder $${VALIDATION_RULES.MAX_AMOUNT}`)
   }
   
+  // Validar categoría
+  if (!data.category_id) {
+    errors.push('La categoría es obligatoria')
+  }
+  
   // Validar descripción (opcional pero con límite)
   if (data.description && data.description.length > VALIDATION_RULES.MAX_DESCRIPTION_LENGTH) {
     errors.push(`La descripción no puede exceder ${VALIDATION_RULES.MAX_DESCRIPTION_LENGTH} caracteres`)
@@ -53,7 +59,7 @@ export const validateExpenseData = (data) => {
 export const transformDataForDB = (data, userId) => {
   return {
     user_id: userId,
-    category_id: data.category_id || null,
+    category_id: data.category_id,
     amount: parseFloat(data.amount),
     description: data.description?.trim() || null,
     expense_date: data.expense_date || getCurrentDate()

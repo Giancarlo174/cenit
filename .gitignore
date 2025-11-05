@@ -367,5 +367,6 @@ docs/dist/
 .tmp/
 
 schema.sql
+query.sql
 .github
 .vscode
