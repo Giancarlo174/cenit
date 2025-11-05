@@ -1,11 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import Dashboard from '@/views/dashboard/Dashboard.vue'
 import CategoriesList from '@/views/categories/CategoriesList.vue'
 import ExpensesList from '@/views/expenses/ExpensesList.vue'
 
 const routes = [
   {
     path: '/',
-    redirect: '/expenses'
+    redirect: '/dashboard'
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: Dashboard
   },
   {
     path: '/categories',

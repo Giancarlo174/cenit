@@ -8,14 +8,25 @@
         </div>
         <div>
           <h1 class="text-xl font-bold text-gray-900">Cenit</h1>
-          <p class="text-xs text-gray-500">Control de Gastos</p>
         </div>
       </div>
     </div>
 
     <!-- Navegación Principal -->
     <nav class="sidebar-nav">
-      <p class="nav-section-title">MENÚ PRINCIPAL</p>
+      
+      <router-link
+        to="/dashboard"
+        class="nav-item"
+        :class="{ 'nav-item-active': isActive('/dashboard') }"
+      >
+        <div class="nav-item-icon">
+          <Icon name="mdi:view-dashboard" :size="22" />
+        </div>
+        <div class="nav-item-content">
+          <span class="nav-item-title">Dashboard</span>
+        </div>
+      </router-link>
       
       <router-link
         to="/expenses"
@@ -27,7 +38,6 @@
         </div>
         <div class="nav-item-content">
           <span class="nav-item-title">Gastos</span>
-          <span class="nav-item-subtitle">Ver todos los registros</span>
         </div>
       </router-link>
       
@@ -41,7 +51,6 @@
         </div>
         <div class="nav-item-content">
           <span class="nav-item-title">Categorías</span>
-          <span class="nav-item-subtitle">Organiza tus gastos</span>
         </div>
       </router-link>
     </nav>
