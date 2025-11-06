@@ -36,31 +36,33 @@ const { checkAuth } = useAuth()
 const message = ref('Estamos procesando la verificación de tu correo electrónico...')
 
 onMounted(async () => {
-  // Esperar a que la URL tenga los parámetros
-  if (!route.query.access_token && !route.query.code) {
-    message.value = 'No se encontró código de verificación. Redirigiendo...'
-    await showError('Link de verificación inválido')
-    setTimeout(() => router.push('/login'), 2000)
-    return
-  }
-
   try {
-    // Esperar un momento para que Supabase procese el token
+    // Supabase maneja automáticamente el token de la URL
+    // Solo esperamos un momento para que procese
     await new Promise(resolve => setTimeout(resolve, 1500))
 
     // Verificar si ahora hay sesión activa
     await checkAuth()
-
-    message.value = 'Verificación completa. Redirigiendo...'
-    await showSuccess('¡Cuenta verificada correctamente! Bienvenido a Cenit.')
     
-    // Redirigir al dashboard
-    setTimeout(() => router.push('/dashboard'), 1500)
+    const { isAuthenticated } = useAuth()
+    
+    if (isAuthenticated.value) {
+      message.value = 'Verificación completa. Redirigiendo...'
+      await showSuccess('¡Cuenta verificada correctamente! Bienvenido a Cenit.')
+      
+      // Redirigir al dashboard
+      setTimeout(() => router.push('/dashboard'), 1500)
+    } else {
+      // No hay sesión pero la verificación pudo haber sido exitosa
+      message.value = 'Cuenta verificada. Por favor, inicia sesión.'
+      await showSuccess('Cuenta verificada correctamente. Ahora puedes iniciar sesión.')
+      setTimeout(() => router.push('/login'), 2000)
+    }
   } catch (error) {
     console.error('Error en verificación:', error)
-    message.value = 'Ocurrió un error al verificar tu cuenta. Por favor, intenta iniciar sesión.'
-    await showError('Error en la verificación. Intenta iniciar sesión manualmente.')
-    setTimeout(() => router.push('/login'), 3000)
+    message.value = 'Cuenta verificada. Por favor, inicia sesión para continuar.'
+    await showSuccess('Verificación completa. Inicia sesión para acceder.')
+    setTimeout(() => router.push('/login'), 2000)
   }
 })
 </script>

@@ -9,6 +9,7 @@ import { create } from '@/services/expenses/create'
 import { deleteExpense } from '@/services/expenses/delete'
 import { showSuccess, showError, confirmDelete } from '@/modules/notifications'
 import { calculateTotalExpenses } from '@/modules/expenses'
+import { useAuth } from '@/composables/useAuth'
 
 export function useExpenses() {
   // Estado reactivo
@@ -17,8 +18,8 @@ export function useExpenses() {
   const error = ref(null)
   const searchTerm = ref('')
 
-  // TODO: Obtener userId del sistema de autenticación real
-  const userId = ref('demo-user-id')
+  // Obtener userId del sistema de autenticación
+  const { userId } = useAuth()
 
   // Gastos filtrados por búsqueda (descripción o monto)
   const filteredExpenses = computed(() => {
@@ -43,6 +44,12 @@ export function useExpenses() {
    * Obtiene todos los gastos del usuario
    */
   const fetchExpenses = async () => {
+    // No intentar cargar si no hay usuario autenticado
+    if (!userId.value) {
+      console.warn('No hay usuario autenticado')
+      return
+    }
+
     loading.value = true
     error.value = null
     

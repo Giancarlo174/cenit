@@ -16,14 +16,39 @@ export const apiClient = {
   /**
    * Obtiene todos los registros de una tabla
    * @param {string} table - Nombre de la tabla
-   * @param {string} orderBy - Campo por el cual ordenar
+   * @param {Object|string} options - Opciones de consulta o string de orderBy (retrocompatibilidad)
+   * @param {Object} options.filters - Filtros a aplicar (ej: { user_id: 'abc' })
+   * @param {Object|string} options.orderBy - Campo para ordenar o objeto { column, ascending }
    * @returns {Promise<Array>} Array de registros
    */
-  async getAll(table, orderBy = 'created_at') {
-    const { data, error } = await supabase
-      .from(table)
-      .select('*')
-      .order(orderBy, { ascending: false })
+  async getAll(table, options = {}) {
+    // Retrocompatibilidad: si options es un string, es el orderBy
+    if (typeof options === 'string') {
+      options = { orderBy: options }
+    }
+
+    // Valores por defecto
+    const { 
+      filters = {}, 
+      orderBy = 'created_at' 
+    } = options
+
+    // Construir consulta
+    let query = supabase.from(table).select('*')
+
+    // Aplicar filtros
+    Object.entries(filters).forEach(([key, value]) => {
+      query = query.eq(key, value)
+    })
+
+    // Aplicar ordenamiento
+    if (typeof orderBy === 'string') {
+      query = query.order(orderBy, { ascending: false })
+    } else if (orderBy && orderBy.column) {
+      query = query.order(orderBy.column, { ascending: orderBy.ascending ?? false })
+    }
+
+    const { data, error } = await query
     
     if (error) throw error
     return data

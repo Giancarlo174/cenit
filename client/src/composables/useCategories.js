@@ -8,6 +8,7 @@ import { getAll } from '@/services/categories/getAll'
 import { create } from '@/services/categories/create'
 import { deleteCategory } from '@/services/categories/delete'
 import { showSuccess, showError, confirmDelete } from '@/modules/notifications'
+import { useAuth } from '@/composables/useAuth'
 
 export function useCategories() {
   // Estado reactivo
@@ -16,8 +17,8 @@ export function useCategories() {
   const error = ref(null)
   const searchTerm = ref('')
 
-  // TODO: Obtener userId del sistema de autenticación real
-  const userId = ref('demo-user-id')
+  // Obtener userId del sistema de autenticación
+  const { userId } = useAuth()
 
   // Categorías filtradas por búsqueda
   const filteredCategories = computed(() => {
@@ -37,6 +38,12 @@ export function useCategories() {
    * Obtiene todas las categorías del usuario
    */
   const fetchCategories = async () => {
+    // No intentar cargar si no hay usuario autenticado
+    if (!userId.value) {
+      console.warn('No hay usuario autenticado')
+      return
+    }
+
     loading.value = true
     error.value = null
     

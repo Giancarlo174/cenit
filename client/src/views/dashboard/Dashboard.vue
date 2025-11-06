@@ -6,15 +6,6 @@
         <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p class="text-gray-600 mt-1">Resumen de tus finanzas</p>
       </div>
-      
-      <Button
-        icon="mdi:refresh"
-        variant="secondary"
-        @click="refreshStats"
-        :loading="loading"
-      >
-        Actualizar
-      </Button>
     </div>
 
     <!-- Loading State -->
@@ -204,7 +195,6 @@
 <script setup>
 import { useDashboard } from '@/composables/useDashboard'
 import { formatCurrency, formatDate } from '@/utils/formatters'
-import Button from '@/components/UI/Button.vue'
 import Card from '@/components/UI/Card.vue'
 import Icon from '@/components/UI/Icon.vue'
 
@@ -220,7 +210,6 @@ const {
   topCategory,
   hasData,
   hasPositiveBalance,
-  spentPercentage,
-  refreshStats
+  spentPercentage
 } = useDashboard()
 </script>

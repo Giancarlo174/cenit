@@ -13,13 +13,14 @@ import { transformDataFromDB } from '@/modules/categories'
  */
 export const getAll = async (userId) => {
   try {
-    const data = await apiClient.getAll('categories')
-    
-    // Filtra solo las categorías del usuario autenticado
-    const userCategories = data.filter(cat => cat.user_id === userId)
+    // Obtener solo las categorías del usuario, ordenadas por nombre
+    const data = await apiClient.getAll('categories', {
+      filters: { user_id: userId },
+      orderBy: { column: 'name', ascending: true }
+    })
     
     // Transforma los datos desde la DB
-    return userCategories.map(transformDataFromDB)
+    return data.map(transformDataFromDB)
   } catch (error) {
     if (error.message.includes('does not exist')) {
       throw new Error('Tabla "categories" no configurada en Supabase')

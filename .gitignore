@@ -370,3 +370,4 @@ schema.sql
 query.sql
 .github
 .vscode
+commit-messages.md

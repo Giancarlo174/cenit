@@ -13,13 +13,14 @@ import { transformDataFromDB } from '@/modules/expenses'
  */
 export const getAll = async (userId) => {
   try {
-    const data = await apiClient.getAll('expenses', 'expense_date')
-    
-    // Filtra solo los gastos del usuario autenticado
-    const userExpenses = data.filter(expense => expense.user_id === userId)
+    // Obtener solo los gastos del usuario, ordenados por fecha descendente
+    const data = await apiClient.getAll('expenses', {
+      filters: { user_id: userId },
+      orderBy: { column: 'expense_date', ascending: false }
+    })
     
     // Transforma los datos desde la DB
-    return userExpenses.map(transformDataFromDB)
+    return data.map(transformDataFromDB)
   } catch (error) {
     if (error.message.includes('does not exist')) {
       throw new Error('Tabla "expenses" no configurada en Supabase')

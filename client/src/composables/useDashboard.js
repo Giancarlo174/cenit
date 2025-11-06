@@ -6,6 +6,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { getStats } from '@/services/dashboard/getStats'
 import { showError } from '@/modules/notifications'
+import { useAuth } from '@/composables/useAuth'
 
 export function useDashboard() {
   // Estado reactivo
@@ -13,8 +14,8 @@ export function useDashboard() {
   const loading = ref(false)
   const error = ref(null)
 
-  // TODO: Obtener userId del sistema de autenticación real
-  const userId = ref('demo-user-id')
+  // Obtener userId del sistema de autenticación
+  const { userId } = useAuth()
 
   // Computed properties para acceso fácil a los datos
   const currentBalance = computed(() => stats.value?.currentBalance || 0)
@@ -43,6 +44,12 @@ export function useDashboard() {
    * Obtiene las estadísticas del dashboard
    */
   const fetchStats = async () => {
+    // No intentar cargar si no hay usuario autenticado
+    if (!userId.value) {
+      console.warn('No hay usuario autenticado')
+      return
+    }
+
     loading.value = true
     error.value = null
     
@@ -50,7 +57,7 @@ export function useDashboard() {
       stats.value = await getStats(userId.value)
     } catch (err) {
       error.value = err.message
-      await showError(err.message)
+      await showError(`Error al obtener estadísticas: ${err.message}`)
     } finally {
       loading.value = false
     }
