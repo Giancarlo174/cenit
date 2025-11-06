@@ -1,14 +1,28 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-50">
-    <Sidebar />
-    <main class="main-content">
+    <template v-if="showLayout">
+      <Sidebar />
+      <main class="main-content">
+        <router-view />
+      </main>
+    </template>
+    <template v-else>
       <router-view />
-    </main>
+    </template>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import Sidebar from '@/components/layout/Sidebar.vue'
+
+const route = useRoute()
+
+// Mostrar layout solo en rutas que requieren autenticación
+const showLayout = computed(() => {
+  return route.meta.requiresAuth === true
+})
 </script>
 
 <style>

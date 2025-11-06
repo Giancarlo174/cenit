@@ -5,17 +5,24 @@
       <span v-if="required" class="text-red-500">*</span>
     </label>
     
-    <input
-      :id="id"
-      :type="type"
-      :value="modelValue"
-      :placeholder="placeholder"
-      :disabled="disabled"
-      :required="required"
-      :class="inputClasses"
-      @input="handleInput"
-      @blur="handleBlur"
-    />
+    <div class="relative">
+      <input
+        :id="id"
+        :type="type"
+        :value="modelValue"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :required="required"
+        :class="inputClasses"
+        @input="handleInput"
+        @blur="handleBlur"
+      />
+      
+      <!-- Slot para iconos/botones dentro del input (ej: toggle password) -->
+      <div v-if="$slots.suffix" class="absolute inset-y-0 right-0 flex items-center pr-3">
+        <slot name="suffix" />
+      </div>
+    </div>
     
     <p v-if="error" class="text-sm text-red-600">
       {{ error }}

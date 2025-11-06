@@ -53,6 +53,43 @@
           <span class="nav-item-title">Categorías</span>
         </div>
       </router-link>
+
+      <!-- Separador -->
+      <div class="my-4 border-t border-gray-200"></div>
+
+      <!-- Configuración -->
+      <router-link
+        to="/settings/change-password"
+        class="nav-item"
+        :class="{ 'nav-item-active': isActive('/settings/change-password') }"
+      >
+        <div class="nav-item-icon">
+          <Icon name="material-symbols:lock-reset" :size="22" />
+        </div>
+        <div class="nav-item-content">
+          <span class="nav-item-title">Cambiar Contraseña</span>
+        </div>
+      </router-link>
+
+      <!-- Botón de Logout -->
+      <button
+        @click="handleLogout"
+        class="nav-item text-left w-full hover:bg-red-50"
+        :disabled="loading"
+      >
+        <div class="nav-item-icon text-red-600">
+          <Icon 
+            :name="loading ? 'material-symbols:progress-activity' : 'material-symbols:logout'" 
+            :size="22" 
+            :class="{ 'animate-spin': loading }"
+          />
+        </div>
+        <div class="nav-item-content">
+          <span class="nav-item-title text-red-600">
+            {{ loading ? 'Cerrando...' : 'Cerrar Sesión' }}
+          </span>
+        </div>
+      </button>
     </nav>
 
     <!-- Footer Info -->
@@ -67,11 +104,22 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 import Icon from '@/components/UI/Icon.vue'
 
 const route = useRoute()
+const { logout, loading } = useAuth()
 
 const isActive = (path) => {
   return route.path === path
+}
+
+const handleLogout = async () => {
+  try {
+    await logout()
+    // El composable maneja la redirección al login
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error)
+  }
 }
 </script>
