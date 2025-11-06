@@ -52,3 +52,25 @@ export const confirmDelete = async (itemName) => {
   
   return result.isConfirmed
 }
+
+/**
+ * Muestra un diálogo de confirmación genérico
+ * @param {string} title - Título del diálogo
+ * @param {string} message - Mensaje del diálogo
+ * @param {string} confirmText - Texto del botón de confirmar (default: 'Confirmar')
+ * @returns {Promise<boolean>} true si confirma, false si cancela
+ */
+export const confirmAction = async (title, message, confirmText = 'Confirmar') => {
+  const result = await Swal.fire({
+    title: title,
+    text: message,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#9333ea',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: confirmText,
+    cancelButtonText: 'Cancelar'
+  })
+  
+  return result.isConfirmed
+}

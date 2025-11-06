@@ -1,10 +1,14 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" @click.self="handleClose">
+  <div 
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    @click.self="closeOnClickOutside ? handleClose : null"
+  >
     <Card :class="['w-full', modalSizeClass, 'max-h-[90vh] overflow-y-auto']">
       <template #header>
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold text-gray-900">{{ title }}</h2>
           <button
+            v-if="showCloseButton"
             @click="handleClose"
             class="text-gray-400 hover:text-gray-600 transition-colors"
             :disabled="loading"
@@ -37,6 +41,14 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  showCloseButton: {
+    type: Boolean,
+    default: true
+  },
+  closeOnClickOutside: {
+    type: Boolean,
+    default: true
   }
 })
 

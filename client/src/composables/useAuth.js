@@ -37,11 +37,7 @@ export function useAuth() {
     try {
       const result = await registerService(credentials)
       
-      await showSuccess(
-        '¡Cuenta creada! Revisa tu correo para verificar tu cuenta. ' +
-        'Serás redirigido automáticamente después de la verificación.',
-        8000
-      )
+      await showSuccess('¡Cuenta creada!')
 
       return {
         success: true,
@@ -74,8 +70,6 @@ export function useAuth() {
       
       user.value = transformAuthUser(authUser)
       session.value = authSession
-
-      await showSuccess('¡Bienvenido de vuelta!')
       
       // Redirigir al dashboard
       router.push('/dashboard')
@@ -98,8 +92,6 @@ export function useAuth() {
       
       user.value = null
       session.value = null
-
-      await showSuccess('Sesión cerrada correctamente')
       
       // Redirigir al login
       router.push('/login')
@@ -147,7 +139,7 @@ export function useAuth() {
     // Crear nueva suscripción
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log('Auth event:', event)
+        // console.log('Auth event:', event)
 
         if (event === 'SIGNED_IN' && currentSession) {
           user.value = transformAuthUser(currentSession.user)

@@ -3,22 +3,25 @@
  * Maneja el estado reactivo y coordinación para categorías
  */
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { getAll } from '@/services/categories/getAll'
 import { create } from '@/services/categories/create'
 import { deleteCategory } from '@/services/categories/delete'
 import { showSuccess, showError, confirmDelete } from '@/modules/notifications'
 import { useAuth } from '@/composables/useAuth'
+import { useDashboard } from '@/composables/useDashboard'
+
+// Estado global de categorías (singleton pattern)
+const categories = ref([])
+const loading = ref(false)
+const error = ref(null)
+const searchTerm = ref('')
+let hasInitialized = false
 
 export function useCategories() {
-  // Estado reactivo
-  const categories = ref([])
-  const loading = ref(false)
-  const error = ref(null)
-  const searchTerm = ref('')
-
   // Obtener userId del sistema de autenticación
   const { userId } = useAuth()
+  const { invalidateCache: invalidateDashboardCache } = useDashboard()
 
   // Categorías filtradas por búsqueda
   const filteredCategories = computed(() => {
@@ -68,6 +71,10 @@ export function useCategories() {
     try {
       const newCategory = await create(categoryData, userId.value)
       categories.value.unshift(newCategory)
+      
+      // Invalidar cache del dashboard para que se actualice el conteo
+      invalidateDashboardCache()
+      
       await showSuccess('Categoría creada exitosamente')
       return newCategory
     } catch (err) {
@@ -93,6 +100,10 @@ export function useCategories() {
     try {
       await deleteCategory(category.id)
       categories.value = categories.value.filter(cat => cat.id !== category.id)
+      
+      // Invalidar cache del dashboard para que se actualice el conteo
+      invalidateDashboardCache()
+      
       await showSuccess('Categoría eliminada exitosamente')
     } catch (err) {
       error.value = err.message
@@ -103,13 +114,25 @@ export function useCategories() {
     }
   }
 
-  // Carga inicial de categorías solo en la vista principal
-  onMounted(() => {
-    // Solo carga si es necesario (cuando hay searchTerm observable)
-    if (searchTerm.value !== undefined) {
-      fetchCategories()
-    }
-  })
+  // Watch para cargar categorías cuando userId esté disponible
+  // Solo se ejecuta una vez gracias a hasInitialized
+  if (!hasInitialized) {
+    watch(
+      userId,
+      (newUserId) => {
+        if (newUserId && categories.value.length === 0) {
+          fetchCategories()
+          hasInitialized = true
+        } else if (!newUserId) {
+          // Limpiar categorías cuando se cierra sesión
+          categories.value = []
+          error.value = null
+          hasInitialized = false
+        }
+      },
+      { immediate: true }
+    )
+  }
 
   return {
     // Estado

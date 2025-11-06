@@ -3,23 +3,26 @@
  * Maneja el estado reactivo y coordinación para gastos
  */
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { getAll } from '@/services/expenses/getAll'
 import { create } from '@/services/expenses/create'
 import { deleteExpense } from '@/services/expenses/delete'
 import { showSuccess, showError, confirmDelete } from '@/modules/notifications'
 import { calculateTotalExpenses } from '@/modules/expenses'
 import { useAuth } from '@/composables/useAuth'
+import { useDashboard } from '@/composables/useDashboard'
+
+// Estado global de gastos (singleton pattern)
+const expenses = ref([])
+const loading = ref(false)
+const error = ref(null)
+const searchTerm = ref('')
+let hasInitialized = false
 
 export function useExpenses() {
-  // Estado reactivo
-  const expenses = ref([])
-  const loading = ref(false)
-  const error = ref(null)
-  const searchTerm = ref('')
-
   // Obtener userId del sistema de autenticación
   const { userId } = useAuth()
+  const { invalidateCache: invalidateDashboardCache } = useDashboard()
 
   // Gastos filtrados por búsqueda (descripción o monto)
   const filteredExpenses = computed(() => {
@@ -74,6 +77,10 @@ export function useExpenses() {
     try {
       const newExpense = await create(expenseData, userId.value)
       expenses.value.unshift(newExpense)
+      
+      // Invalidar cache del dashboard para que se actualice
+      invalidateDashboardCache()
+      
       await showSuccess('Gasto registrado exitosamente')
       return newExpense
     } catch (err) {
@@ -100,6 +107,10 @@ export function useExpenses() {
     try {
       await deleteExpense(expense.id)
       expenses.value = expenses.value.filter(exp => exp.id !== expense.id)
+      
+      // Invalidar cache del dashboard para que se actualice
+      invalidateDashboardCache()
+      
       await showSuccess('Gasto eliminado exitosamente')
     } catch (err) {
       error.value = err.message
@@ -110,10 +121,26 @@ export function useExpenses() {
     }
   }
 
-  // Carga inicial de gastos
-  onMounted(() => {
-    fetchExpenses()
-  })
+  // Watch para cargar gastos cuando userId esté disponible
+  // Solo se ejecuta una vez gracias a hasInitialized
+  if (!hasInitialized) {
+    watch(
+      userId,
+      (newUserId) => {
+        if (newUserId && expenses.value.length === 0) {
+          fetchExpenses()
+          hasInitialized = true
+        } else if (!newUserId) {
+          // Limpiar gastos cuando se cierra sesión
+          expenses.value = []
+          error.value = null
+          searchTerm.value = ''
+          hasInitialized = false
+        }
+      },
+      { immediate: true }
+    )
+  }
 
   return {
     // Estado

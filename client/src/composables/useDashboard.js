@@ -3,17 +3,18 @@
  * Maneja el estado reactivo y coordinación para el dashboard
  */
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { getStats } from '@/services/dashboard/getStats'
 import { showError } from '@/modules/notifications'
 import { useAuth } from '@/composables/useAuth'
 
-export function useDashboard() {
-  // Estado reactivo
-  const stats = ref(null)
-  const loading = ref(false)
-  const error = ref(null)
+// Estado global del dashboard (singleton pattern)
+const stats = ref(null)
+const loading = ref(false)
+const error = ref(null)
+let hasInitialized = false
 
+export function useDashboard() {
   // Obtener userId del sistema de autenticación
   const { userId } = useAuth()
 
@@ -70,10 +71,34 @@ export function useDashboard() {
     await fetchStats()
   }
 
-  // Cargar estadísticas al montar
-  onMounted(() => {
-    fetchStats()
-  })
+  /**
+   * Invalida el cache y fuerza recarga de estadísticas
+   * Útil cuando se crean/eliminan gastos o categorías
+   */
+  const invalidateCache = () => {
+    stats.value = null
+    hasInitialized = false
+  }
+
+  // Watch para cargar estadísticas cuando userId esté disponible
+  // Solo se ejecuta una vez gracias a hasInitialized
+  if (!hasInitialized) {
+    watch(
+      userId,
+      (newUserId) => {
+        if (newUserId && !stats.value) {
+          fetchStats()
+          hasInitialized = true
+        } else if (!newUserId) {
+          // Limpiar estadísticas cuando se cierra sesión
+          stats.value = null
+          error.value = null
+          hasInitialized = false
+        }
+      },
+      { immediate: true }
+    )
+  }
 
   return {
     // Estado
@@ -97,6 +122,7 @@ export function useDashboard() {
     
     // Métodos
     fetchStats,
-    refreshStats
+    refreshStats,
+    invalidateCache
   }
 }

@@ -12,7 +12,7 @@ import ResetPassword from '@/views/auth/ResetPassword.vue'
 import Dashboard from '@/views/dashboard/Dashboard.vue'
 import CategoriesList from '@/views/categories/CategoriesList.vue'
 import ExpensesList from '@/views/expenses/ExpensesList.vue'
-import ChangePassword from '@/views/settings/ChangePassword.vue'
+import ProfileSettings from '@/views/profile/ProfileSettings.vue'
 
 const routes = [
   {
@@ -69,9 +69,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/settings/change-password',
-    name: 'ChangePassword',
-    component: ChangePassword,
+    path: '/profile',
+    name: 'ProfileSettings',
+    component: ProfileSettings,
     meta: { requiresAuth: true }
   }
 ]
