@@ -21,7 +21,6 @@ export function useProfile() {
 
   // Computed properties
   const username = computed(() => profile.value?.username || '')
-  const initialBalance = computed(() => profile.value?.initialBalance || 0)
   const hasProfile = computed(() => profile.value !== null)
 
   /**
@@ -100,7 +99,6 @@ export function useProfile() {
 
     // Computed
     username,
-    initialBalance,
     hasProfile,
 
     // Métodos

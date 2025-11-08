@@ -20,25 +20,29 @@ export function useDashboard() {
 
   // Computed properties para acceso fácil a los datos
   const currentBalance = computed(() => stats.value?.currentBalance || 0)
+  const totalIncome = computed(() => stats.value?.totalIncome || 0)
   const totalExpenses = computed(() => stats.value?.totalExpenses || 0)
-  const initialBalance = computed(() => stats.value?.initialBalance || 0)
+  const transactionCount = computed(() => stats.value?.transactionCount || 0)
+  const incomeCount = computed(() => stats.value?.incomeCount || 0)
   const expenseCount = computed(() => stats.value?.expenseCount || 0)
   const categoryCount = computed(() => stats.value?.categoryCount || 0)
   const expensesByCategory = computed(() => stats.value?.expensesByCategory || [])
-  const recentExpenses = computed(() => stats.value?.recentExpenses || [])
-  const topCategory = computed(() => stats.value?.topCategory)
+  const incomeByCategory = computed(() => stats.value?.incomeByCategory || [])
+  const recentTransactions = computed(() => stats.value?.recentTransactions || [])
+  const topExpenseCategory = computed(() => stats.value?.topExpenseCategory)
+  const topIncomeCategory = computed(() => stats.value?.topIncomeCategory)
   const username = computed(() => stats.value?.username || 'Usuario')
 
   // Indica si hay datos para mostrar
-  const hasData = computed(() => stats.value && expenseCount.value > 0)
+  const hasData = computed(() => stats.value && transactionCount.value > 0)
 
   // Indica si el balance es positivo
   const hasPositiveBalance = computed(() => currentBalance.value > 0)
 
-  // Porcentaje gastado del balance inicial
+  // Porcentaje gastado respecto al total de ingresos
   const spentPercentage = computed(() => {
-    if (initialBalance.value === 0) return 0
-    return Math.min((totalExpenses.value / initialBalance.value) * 100, 100)
+    if (totalIncome.value === 0) return 0
+    return Math.min((totalExpenses.value / totalIncome.value) * 100, 100)
   })
 
   /**
@@ -73,7 +77,7 @@ export function useDashboard() {
 
   /**
    * Invalida el cache y fuerza recarga de estadísticas
-   * Útil cuando se crean/eliminan gastos o categorías
+   * Útil cuando se crean/eliminan transacciones o categorías
    */
   const invalidateCache = () => {
     stats.value = null
@@ -106,19 +110,29 @@ export function useDashboard() {
     loading,
     error,
     
-    // Computed
+    // Computed - Balance
     currentBalance,
+    totalIncome,
     totalExpenses,
-    initialBalance,
-    expenseCount,
-    categoryCount,
-    expensesByCategory,
-    recentExpenses,
-    topCategory,
-    username,
-    hasData,
     hasPositiveBalance,
     spentPercentage,
+    
+    // Computed - Contadores
+    transactionCount,
+    incomeCount,
+    expenseCount,
+    categoryCount,
+    
+    // Computed - Categorías
+    expensesByCategory,
+    incomeByCategory,
+    topExpenseCategory,
+    topIncomeCategory,
+    
+    // Computed - Otros
+    recentTransactions,
+    username,
+    hasData,
     
     // Métodos
     fetchStats,

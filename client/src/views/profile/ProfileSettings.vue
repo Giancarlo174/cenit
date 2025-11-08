@@ -37,21 +37,6 @@
               />
             </div>
 
-            <div>
-              <label for="initialBalance" class="block text-sm font-medium text-gray-700 mb-1">
-                Presupuesto Disponible
-              </label>
-              <Input
-                id="initialBalance"
-                v-model.number="form.initialBalance"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                required
-                :disabled="loading"
-              />
-            </div>
-
             <Button
               type="submit"
               variant="primary"
@@ -198,8 +183,7 @@ const { userEmail } = useAuth()
 
 // Formulario de perfil
 const form = ref({
-  username: '',
-  initialBalance: 0
+  username: ''
 })
 
 // Formulario de contraseña
@@ -218,7 +202,6 @@ const loadingPassword = ref(false)
 watch(profile, (newProfile) => {
   if (newProfile) {
     form.value.username = newProfile.username
-    form.value.initialBalance = newProfile.initialBalance
   }
 }, { immediate: true })
 
@@ -226,7 +209,6 @@ watch(profile, (newProfile) => {
 const isFormValid = computed(() => {
   return (
     form.value.username.trim().length >= 2 &&
-    form.value.initialBalance >= 0 &&
     !loading.value
   )
 })

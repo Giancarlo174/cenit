@@ -8,6 +8,7 @@ import { getAll } from '@/services/categories/getAll'
 import { create } from '@/services/categories/create'
 import { deleteCategory } from '@/services/categories/delete'
 import { showSuccess, showError, confirmDelete } from '@/modules/notifications'
+import { getIncomeCategories, getExpenseCategories } from '@/modules/categories'
 import { useAuth } from '@/composables/useAuth'
 import { useDashboard } from '@/composables/useDashboard'
 
@@ -16,6 +17,7 @@ const categories = ref([])
 const loading = ref(false)
 const error = ref(null)
 const searchTerm = ref('')
+const selectedType = ref(null) // 'income' | 'expense' | null (todas)
 let hasInitialized = false
 
 export function useCategories() {
@@ -23,24 +25,43 @@ export function useCategories() {
   const { userId } = useAuth()
   const { invalidateCache: invalidateDashboardCache } = useDashboard()
 
-  // Categorías filtradas por búsqueda
+  // Categorías filtradas por búsqueda y tipo
   const filteredCategories = computed(() => {
-    if (!searchTerm.value.trim()) {
-      return categories.value
+    let filtered = categories.value
+
+    // Filtrar por tipo si está seleccionado
+    if (selectedType.value === 'income') {
+      filtered = getIncomeCategories(filtered)
+    } else if (selectedType.value === 'expense') {
+      filtered = getExpenseCategories(filtered)
     }
-    
-    return categories.value.filter(cat =>
-      cat.name.toLowerCase().includes(searchTerm.value.toLowerCase())
-    )
+
+    // Filtrar por búsqueda
+    if (searchTerm.value.trim()) {
+      filtered = filtered.filter(cat =>
+        cat.name.toLowerCase().includes(searchTerm.value.toLowerCase())
+      )
+    }
+
+    return filtered
   })
+
+  // Solo categorías de ingresos
+  const incomeCategories = computed(() => getIncomeCategories(categories.value))
+
+  // Solo categorías de gastos
+  const expenseCategories = computed(() => getExpenseCategories(categories.value))
 
   // Indica si hay categorías
   const hasCategories = computed(() => categories.value.length > 0)
+  const hasIncomeCategories = computed(() => incomeCategories.value.length > 0)
+  const hasExpenseCategories = computed(() => expenseCategories.value.length > 0)
 
   /**
    * Obtiene todas las categorías del usuario
+   * @param {Object} filters - Filtros opcionales { type: 'income' | 'expense' }
    */
-  const fetchCategories = async () => {
+  const fetchCategories = async (filters = {}) => {
     // No intentar cargar si no hay usuario autenticado
     if (!userId.value) {
       console.warn('No hay usuario autenticado')
@@ -51,7 +72,7 @@ export function useCategories() {
     error.value = null
     
     try {
-      categories.value = await getAll(userId.value)
+      categories.value = await getAll(userId.value, filters)
     } catch (err) {
       error.value = err.message
       await showError(err.message)
@@ -114,6 +135,14 @@ export function useCategories() {
     }
   }
 
+  /**
+   * Establece el filtro por tipo
+   * @param {'income' | 'expense' | null} type - Tipo a filtrar
+   */
+  const setTypeFilter = (type) => {
+    selectedType.value = type
+  }
+
   // Watch para cargar categorías cuando userId esté disponible
   // Solo se ejecuta una vez gracias a hasInitialized
   if (!hasInitialized) {
@@ -127,6 +156,8 @@ export function useCategories() {
           // Limpiar categorías cuando se cierra sesión
           categories.value = []
           error.value = null
+          searchTerm.value = ''
+          selectedType.value = null
           hasInitialized = false
         }
       },
@@ -138,14 +169,22 @@ export function useCategories() {
     // Estado
     categories,
     filteredCategories,
+    incomeCategories,
+    expenseCategories,
     loading,
     error,
     searchTerm,
+    selectedType,
+    
+    // Computed - Indicadores
     hasCategories,
+    hasIncomeCategories,
+    hasExpenseCategories,
     
     // Métodos
     fetchCategories,
     createCategory,
-    removeCategory
+    removeCategory,
+    setTypeFilter
   }
 }

@@ -10,6 +10,7 @@ import { validateCategoryData, transformDataForDB, transformDataFromDB } from '@
  * Crea una nueva categoría
  * @param {Object} data - Datos de la categoría
  * @param {string} data.name - Nombre de la categoría
+ * @param {string} data.type - Tipo (income o expense)
  * @param {string} userId - ID del usuario autenticado
  * @returns {Promise<Object>} Categoría creada
  */
@@ -28,7 +29,7 @@ export const create = async (data, userId) => {
     return transformDataFromDB(result)
   } catch (error) {
     if (error.message.includes('duplicate key')) {
-      throw new Error('Ya existe una categoría con ese nombre')
+      throw new Error('Ya existe una categoría con ese nombre y tipo')
     }
     if (error.message.includes('does not exist')) {
       throw new Error('Tabla "categories" no configurada en Supabase')

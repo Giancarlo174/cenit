@@ -4,92 +4,117 @@
  */
 
 /**
- * Calcula el balance actual (balance inicial - total gastado)
- * @param {number} initialBalance - Balance inicial del perfil
+ * Calcula el balance actual (ingresos - gastos)
+ * @param {number} totalIncome - Total de ingresos
  * @param {number} totalExpenses - Total de gastos
- * @returns {number} Balance disponible
+ * @returns {number} Balance actual
  */
-export const calculateCurrentBalance = (initialBalance, totalExpenses) => {
-  return initialBalance - totalExpenses
+export const calculateBalance = (totalIncome, totalExpenses) => {
+  return totalIncome - totalExpenses
 }
 
 /**
- * Agrupa gastos por categoría y calcula totales
- * @param {Array} expenses - Lista de gastos
+ * Agrupa transacciones por categoría y calcula totales
+ * @param {Array} transactions - Lista de transacciones
  * @param {Array} categories - Lista de categorías
- * @returns {Array} Gastos agrupados por categoría con totales
+ * @param {string} type - Tipo de transacciones a agrupar ('income' o 'expense')
+ * @returns {Array} Transacciones agrupadas por categoría con totales
  */
-export const groupExpensesByCategory = (expenses, categories) => {
+export const groupTransactionsByCategory = (transactions, categories, type) => {
+  // Filtra transacciones por tipo
+  const filteredTransactions = transactions.filter(t => t.type === type)
+  
   // Crea un mapa de categorías para acceso rápido
-  const categoryMap = categories.reduce((acc, cat) => {
-    acc[cat.id] = { ...cat, total: 0, count: 0, percentage: 0 }
-    return acc
-  }, {})
+  const categoryMap = categories
+    .filter(cat => cat.type === type)
+    .reduce((acc, cat) => {
+      acc[cat.id] = { ...cat, total: 0, count: 0, percentage: 0 }
+      return acc
+    }, {})
 
-  // Suma los gastos por categoría
-  expenses.forEach(expense => {
-    if (categoryMap[expense.categoryId]) {
-      categoryMap[expense.categoryId].total += expense.amount
-      categoryMap[expense.categoryId].count += 1
+  // Suma las transacciones por categoría
+  filteredTransactions.forEach(transaction => {
+    if (categoryMap[transaction.categoryId]) {
+      categoryMap[transaction.categoryId].total += transaction.amount
+      categoryMap[transaction.categoryId].count += 1
     }
   })
 
-  // Calcula el total general de gastos
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0)
+  // Calcula el total general
+  const total = filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
 
   // Convierte a array y calcula porcentajes
   const grouped = Object.values(categoryMap)
-    .filter(cat => cat.count > 0) // Solo categorías con gastos
+    .filter(cat => cat.count > 0)
     .map(cat => ({
       ...cat,
-      percentage: totalExpenses > 0 ? (cat.total / totalExpenses) * 100 : 0
+      percentage: total > 0 ? (cat.total / total) * 100 : 0
     }))
-    .sort((a, b) => b.total - a.total) // Ordenar por total descendente
+    .sort((a, b) => b.total - a.total)
 
   return grouped
 }
 
 /**
- * Obtiene los gastos más recientes
- * @param {Array} expenses - Lista de gastos
- * @param {number} limit - Cantidad de gastos a retornar
- * @returns {Array} Gastos recientes ordenados por fecha
+ * Obtiene las transacciones más recientes
+ * @param {Array} transactions - Lista de transacciones
+ * @param {number} limit - Cantidad de transacciones a retornar
+ * @returns {Array} Transacciones recientes ordenadas por fecha
  */
-export const getRecentExpenses = (expenses, limit = 10) => {
-  return [...expenses]
-    .sort((a, b) => new Date(b.expenseDate) - new Date(a.expenseDate))
+export const getRecentTransactions = (transactions, limit = 10) => {
+  return [...transactions]
+    .sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate))
     .slice(0, limit)
 }
 
 /**
  * Calcula estadísticas generales del dashboard
  * @param {Object} data - Datos del usuario
- * @param {number} data.initialBalance - Balance inicial
- * @param {Array} data.expenses - Lista de gastos
+ * @param {Array} data.transactions - Lista de transacciones
  * @param {Array} data.categories - Lista de categorías
  * @returns {Object} Estadísticas del dashboard
  */
 export const calculateDashboardStats = (data) => {
-  const { initialBalance, expenses, categories } = data
+  const { transactions, categories } = data
 
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0)
-  const currentBalance = calculateCurrentBalance(initialBalance, totalExpenses)
-  const expensesByCategory = groupExpensesByCategory(expenses, categories)
-  const recentExpenses = getRecentExpenses(expenses, 15)
+  const totalIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const totalExpenses = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const currentBalance = calculateBalance(totalIncome, totalExpenses)
+  
+  const expensesByCategory = groupTransactionsByCategory(transactions, categories, 'expense')
+  const incomeByCategory = groupTransactionsByCategory(transactions, categories, 'income')
+  
+  const recentTransactions = getRecentTransactions(transactions, 15)
   
   // Encuentra la categoría con más gastos
-  const topCategory = expensesByCategory.length > 0 
+  const topExpenseCategory = expensesByCategory.length > 0 
     ? expensesByCategory[0] 
+    : null
+
+  // Encuentra la categoría con más ingresos
+  const topIncomeCategory = incomeByCategory.length > 0
+    ? incomeByCategory[0]
     : null
 
   return {
     currentBalance,
+    totalIncome,
     totalExpenses,
-    expenseCount: expenses.length,
+    transactionCount: transactions.length,
+    incomeCount: transactions.filter(t => t.type === 'income').length,
+    expenseCount: transactions.filter(t => t.type === 'expense').length,
     categoryCount: categories.length,
     expensesByCategory,
-    recentExpenses,
-    topCategory
+    incomeByCategory,
+    recentTransactions,
+    topExpenseCategory,
+    topIncomeCategory
   }
 }
 

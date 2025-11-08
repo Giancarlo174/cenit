@@ -7,7 +7,6 @@
  * Valida los datos de actualización de perfil
  * @param {Object} data - Datos del perfil
  * @param {string} data.username - Nombre de usuario
- * @param {number} data.initialBalance - Balance inicial
  * @returns {{isValid: boolean, errors: string[]}}
  */
 export const validateProfileData = (data) => {
@@ -25,14 +24,6 @@ export const validateProfileData = (data) => {
     errors.push('El nombre de usuario no puede exceder 50 caracteres')
   }
 
-  if (data.initialBalance === undefined || data.initialBalance === null) {
-    errors.push('El balance inicial es obligatorio')
-  }
-
-  if (data.initialBalance < 0) {
-    errors.push('El balance inicial no puede ser negativo')
-  }
-
   return { isValid: errors.length === 0, errors }
 }
 
@@ -43,8 +34,7 @@ export const validateProfileData = (data) => {
  */
 export const transformProfileForDB = (data) => {
   return {
-    username: data.username.trim(),
-    initial_balance: parseFloat(data.initialBalance)
+    username: data.username.trim()
   }
 }
 
@@ -57,7 +47,6 @@ export const transformProfileFromDB = (dbData) => {
   return {
     id: dbData.id,
     username: dbData.username,
-    initialBalance: parseFloat(dbData.initial_balance) || 0,
     role: dbData.role,
     createdAt: dbData.created_at
   }

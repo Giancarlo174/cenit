@@ -9,13 +9,22 @@ import { transformDataFromDB } from '@/modules/categories'
 /**
  * Obtiene todas las categorías del usuario
  * @param {string} userId - ID del usuario autenticado
+ * @param {Object} [options] - Opciones de filtrado
+ * @param {string} [options.type] - Filtrar por tipo (income/expense)
  * @returns {Promise<Array>} Array de categorías transformadas
  */
-export const getAll = async (userId) => {
+export const getAll = async (userId, options = {}) => {
   try {
-    // Obtener solo las categorías del usuario, ordenadas por nombre
+    const filters = { user_id: userId }
+    
+    // Agregar filtro por tipo si se especifica
+    if (options.type) {
+      filters.type = options.type
+    }
+
+    // Obtener categorías del usuario, ordenadas por nombre
     const data = await apiClient.getAll('categories', {
-      filters: { user_id: userId },
+      filters,
       orderBy: { column: 'name', ascending: true }
     })
     

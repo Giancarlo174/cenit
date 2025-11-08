@@ -1,6 +1,6 @@
 <template>
   <Modal 
-    title="Nuevo Gasto" 
+    :title="`Nuevo ${props.type === 'income' ? 'Ingreso' : 'Gasto'}`" 
     size="md"
     :loading="loading"
     @close="handleClose"
@@ -22,7 +22,7 @@
       <div>
         <Select
           v-model="form.category_id"
-          :options="categories"
+          :options="filteredCategories"
           label="Categoría"
           placeholder="Selecciona una categoría"
           value-key="id"
@@ -32,15 +32,15 @@
         />
         
         <!-- Mensaje cuando no hay categorías -->
-        <div v-if="!hasCategories" class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div v-if="!hasCategoriesOfType" class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div class="flex items-start gap-2">
             <Icon name="mdi:alert-circle" :size="20" class="text-yellow-600 flex-shrink-0 mt-0.5" />
             <div class="flex-1">
               <p class="text-sm text-yellow-800 font-medium mb-1">
-                No tienes categorías creadas
+                No tienes categorías de {{ props.type === 'income' ? 'ingresos' : 'gastos' }}
               </p>
               <p class="text-xs text-yellow-700 mb-2">
-                Para registrar un gasto necesitas primero crear al menos una categoría.
+                Para registrar un {{ props.type === 'income' ? 'ingreso' : 'gasto' }} necesitas primero crear al menos una categoría de ese tipo.
               </p>
               <Button
                 variant="secondary"
@@ -60,7 +60,7 @@
       <Textarea
         v-model="form.description"
         label="Descripción"
-        placeholder="¿En qué gastaste?"
+        :placeholder="`¿${props.type === 'income' ? 'De dónde proviene' : 'En qué gastaste'}?`"
         :rows="3"
         :max-length="500"
         :error="errors.description"
@@ -68,17 +68,30 @@
 
       <!-- Fecha -->
       <Input
-        v-model="form.expense_date"
+        v-model="form.transaction_date"
         type="date"
-        label="Fecha del gasto"
+        :label="`Fecha del ${props.type === 'income' ? 'ingreso' : 'gasto'}`"
         hint="Si no se especifica, se usará la fecha actual"
       />
 
       <!-- Resumen previo -->
-      <div v-if="form.amount > 0" class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+      <div v-if="form.amount > 0" :class="[
+        'p-4 rounded-lg border',
+        props.type === 'income' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+      ]">
         <div class="flex items-center justify-between text-sm">
-          <span class="text-purple-700 font-medium">Monto a registrar:</span>
-          <span class="text-xl font-bold text-red-600">-{{ formatCurrency(form.amount) }}</span>
+          <span :class="[
+            'font-medium',
+            props.type === 'income' ? 'text-green-700' : 'text-red-700'
+          ]">
+            Monto a registrar:
+          </span>
+          <span :class="[
+            'text-xl font-bold',
+            props.type === 'income' ? 'text-green-600' : 'text-red-600'
+          ]">
+            {{ props.type === 'income' ? '+' : '-' }}{{ formatCurrency(form.amount) }}
+          </span>
         </div>
       </div>
 
@@ -97,7 +110,7 @@
           :disabled="!isFormValid"
           :loading="loading"
         >
-          Registrar Gasto
+          Registrar {{ props.type === 'income' ? 'Ingreso' : 'Gasto' }}
         </Button>
       </div>
     </form>
@@ -107,9 +120,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useExpenses } from '@/composables/useExpenses'
+import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
-import { validateExpenseData } from '@/modules/expenses'
+import { validateTransactionData } from '@/modules/transactions'
 import { formatCurrency, getCurrentDate } from '@/utils/formatters'
 import Button from '@/components/UI/Button.vue'
 import Modal from '@/components/UI/Modal.vue'
@@ -118,17 +131,35 @@ import Select from '@/components/UI/Select.vue'
 import Textarea from '@/components/UI/Textarea.vue'
 import Icon from '@/components/UI/Icon.vue'
 
+const props = defineProps({
+  type: {
+    type: String,
+    required: true,
+    validator: (value) => ['income', 'expense'].includes(value)
+  }
+})
+
 const emit = defineEmits(['close', 'created'])
 const router = useRouter()
 
-const { createExpense } = useExpenses()
-const { categories, hasCategories, fetchCategories } = useCategories()
+const { createTransaction } = useTransactions()
+const { incomeCategories, expenseCategories, fetchCategories } = useCategories()
+
+// Categorías filtradas según el tipo
+const filteredCategories = computed(() => {
+  return props.type === 'income' ? incomeCategories.value : expenseCategories.value
+})
+
+const hasCategoriesOfType = computed(() => {
+  return filteredCategories.value.length > 0
+})
 
 const form = ref({
+  type: props.type,
   amount: null,
   category_id: null,
   description: '',
-  expense_date: getCurrentDate()
+  transaction_date: getCurrentDate()
 })
 
 const loading = ref(false)
@@ -142,7 +173,7 @@ const errors = ref({
 const isFormValid = computed(() => {
   return form.value.amount > 0 && 
          form.value.category_id && 
-         hasCategories.value && 
+         hasCategoriesOfType.value && 
          !loading.value
 })
 
@@ -158,7 +189,7 @@ const validateForm = () => {
     description: null
   }
   
-  const validation = validateExpenseData(form.value)
+  const validation = validateTransactionData(form.value)
   
   if (!validation.isValid) {
     validation.errors.forEach(error => {
@@ -187,7 +218,7 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    await createExpense(form.value)
+    await createTransaction(form.value)
     emit('created')
     emit('close')
   } catch (error) {

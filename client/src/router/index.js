@@ -11,7 +11,7 @@ import ResetPassword from '@/views/auth/ResetPassword.vue'
 // Views - App
 import Dashboard from '@/views/dashboard/Dashboard.vue'
 import CategoriesList from '@/views/categories/CategoriesList.vue'
-import ExpensesList from '@/views/expenses/ExpensesList.vue'
+import TransactionsList from '@/views/transactions/TransactionsList.vue'
 import ProfileSettings from '@/views/profile/ProfileSettings.vue'
 
 const routes = [
@@ -63,9 +63,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/expenses',
-    name: 'ExpensesList',
-    component: ExpensesList,
+    path: '/transactions',
+    name: 'TransactionsList',
+    component: TransactionsList,
     meta: { requiresAuth: true }
   },
   {

@@ -4,7 +4,7 @@
     <div class="page-header">
       <div>
         <h1 class="text-3xl font-bold text-gray-900">Categorías</h1>
-        <p class="text-gray-600 mt-1">Gestiona las categorías de tus gastos</p>
+        <p class="text-gray-600 mt-1">Gestiona las categorías de tus ingresos y gastos</p>
       </div>
       
       <Button
@@ -15,14 +15,43 @@
       </Button>
     </div>
 
-    <!-- Buscador -->
+    <!-- Buscador y Filtros -->
     <Card v-if="hasCategories" class="mb-6">
-      <Input
-        v-model="searchTerm"
-        type="text"
-        placeholder="Buscar categorías..."
-        icon="mdi:magnify"
-      />
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <Input
+            v-model="searchTerm"
+            type="text"
+            placeholder="Buscar categorías..."
+            icon="mdi:magnify"
+          />
+        </div>
+        <div class="flex gap-2">
+          <Button
+            :variant="selectedType === null ? 'primary' : 'ghost'"
+            size="sm"
+            @click="setTypeFilter(null)"
+          >
+            Todas
+          </Button>
+          <Button
+            :variant="selectedType === 'income' ? 'secondary' : 'ghost'"
+            size="sm"
+            icon="mdi:cash-plus"
+            @click="setTypeFilter('income')"
+          >
+            Ingresos
+          </Button>
+          <Button
+            :variant="selectedType === 'expense' ? 'primary' : 'ghost'"
+            size="sm"
+            icon="mdi:cash-minus"
+            @click="setTypeFilter('expense')"
+          >
+            Gastos
+          </Button>
+        </div>
+      </div>
     </Card>
 
     <!-- Loading State -->
@@ -46,14 +75,31 @@
         class="hover-card"
       >
         <div class="flex items-start justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-              <Icon name="material-symbols:category" :size="24" class="text-purple-600" />
+          <div class="flex items-center gap-3 flex-1">
+            <div :class="[
+              'w-12 h-12 rounded-lg flex items-center justify-center',
+              category.type === 'income' ? 'bg-green-100' : 'bg-purple-100'
+            ]">
+              <Icon 
+                :name="category.type === 'income' ? 'mdi:cash-plus' : 'material-symbols:category'" 
+                :size="24" 
+                :class="category.type === 'income' ? 'text-green-600' : 'text-purple-600'"
+              />
             </div>
-            <div>
-              <h3 class="font-semibold text-gray-900">{{ category.name }}</h3>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold text-gray-900 truncate">{{ category.name }}</h3>
+                <span :class="[
+                  'text-xs px-2 py-0.5 rounded-full flex-shrink-0',
+                  category.type === 'income' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
+                ]">
+                  {{ category.type === 'income' ? 'Ingreso' : 'Gasto' }}
+                </span>
+              </div>
               <p class="text-sm text-gray-500">
-                Creada: {{ formatDate(category.createdAt) }}
+                {{ formatDate(category.createdAt) }}
               </p>
             </div>
           </div>
@@ -90,9 +136,11 @@ import CreateCategory from './CreateCategory.vue'
 const { 
   filteredCategories, 
   loading, 
-  searchTerm, 
+  searchTerm,
+  selectedType,
   hasCategories, 
-  removeCategory 
+  removeCategory,
+  setTypeFilter
 } = useCategories()
 
 const showCreateForm = ref(false)
