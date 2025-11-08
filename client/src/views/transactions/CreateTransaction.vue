@@ -3,6 +3,7 @@
     :title="`Nuevo ${props.type === 'income' ? 'Ingreso' : 'Gasto'}`" 
     size="md"
     :loading="loading"
+    :show-close-button="false"
     @close="handleClose"
   >
     <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -56,14 +57,15 @@
         </div>
       </div>
 
-      <!-- Descripción -->
-      <Textarea
-        v-model="form.description"
-        label="Descripción"
+      <!-- Nombre -->
+      <Input
+        v-model="form.name"
+        type="text"
+        label="Nombre"
         :placeholder="`¿${props.type === 'income' ? 'De dónde proviene' : 'En qué gastaste'}?`"
-        :rows="3"
-        :max-length="500"
-        :error="errors.description"
+        :maxlength="40"
+        required
+        :error="errors.name"
       />
 
       <!-- Fecha -->
@@ -158,7 +160,7 @@ const form = ref({
   type: props.type,
   amount: null,
   category_id: null,
-  description: '',
+  name: '',
   transaction_date: getCurrentDate()
 })
 
@@ -166,13 +168,15 @@ const loading = ref(false)
 const errors = ref({
   amount: null,
   category: null,
-  description: null
+  name: null
 })
 
 // Validación visual para deshabilitar botón
 const isFormValid = computed(() => {
   return form.value.amount > 0 && 
-         form.value.category_id && 
+         form.value.category_id !== null && 
+         form.value.category_id !== '' && 
+         form.value.name?.trim().length >= 3 &&
          hasCategoriesOfType.value && 
          !loading.value
 })
@@ -186,7 +190,7 @@ const validateForm = () => {
   errors.value = {
     amount: null,
     category: null,
-    description: null
+    name: null
   }
   
   const validation = validateTransactionData(form.value)
@@ -197,8 +201,8 @@ const validateForm = () => {
         errors.value.amount = error
       } else if (error.includes('categoría')) {
         errors.value.category = error
-      } else if (error.includes('descripción')) {
-        errors.value.description = error
+      } else if (error.includes('nombre')) {
+        errors.value.name = error
       }
     })
     return false

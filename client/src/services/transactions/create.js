@@ -12,7 +12,7 @@ import { validateTransactionData, transformDataForDB, transformDataFromDB } from
  * @param {string} data.type - Tipo (income o expense)
  * @param {number} data.amount - Monto
  * @param {string} data.category_id - ID de la categoría
- * @param {string} [data.description] - Descripción opcional
+ * @param {string} data.name - Nombre de la transacción
  * @param {string} [data.transaction_date] - Fecha de la transacción
  * @param {string} userId - ID del usuario autenticado
  * @returns {Promise<Object>} Transacción creada

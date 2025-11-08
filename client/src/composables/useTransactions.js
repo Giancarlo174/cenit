@@ -27,7 +27,7 @@ let hasInitialized = false
 export function useTransactions() {
   // Obtener userId del sistema de autenticación
   const { userId } = useAuth()
-  const { invalidateCache: invalidateDashboardCache } = useDashboard()
+  const { invalidateCache: invalidateDashboardCache, refreshStats } = useDashboard()
 
   // Transacciones filtradas por búsqueda y tipo
   const filteredTransactions = computed(() => {
@@ -38,11 +38,11 @@ export function useTransactions() {
       filtered = filterByType(filtered, selectedType.value)
     }
 
-    // Filtrar por búsqueda (descripción o monto)
+    // Filtrar por búsqueda (nombre o monto)
     if (searchTerm.value.trim()) {
       const search = searchTerm.value.toLowerCase()
       filtered = filtered.filter(transaction =>
-        transaction.description?.toLowerCase().includes(search) ||
+        transaction.name?.toLowerCase().includes(search) ||
         transaction.amount.toString().includes(search)
       )
     }
@@ -102,8 +102,9 @@ export function useTransactions() {
       const newTransaction = await create(transactionData, userId.value)
       transactions.value.unshift(newTransaction)
       
-      // Invalidar cache del dashboard para refrescar estadísticas
+      // Invalidar cache del dashboard y refrescar estadísticas
       invalidateDashboardCache()
+      await refreshStats()
       
       const type = transactionData.type === 'income' ? 'Ingreso' : 'Gasto'
       await showSuccess(`${type} registrado exitosamente`)
@@ -123,7 +124,7 @@ export function useTransactions() {
    */
   const removeTransaction = async (transaction) => {
     const type = transaction.type === 'income' ? 'ingreso' : 'gasto'
-    const itemName = transaction.description || `${type} de $${transaction.amount}`
+    const itemName = transaction.name || `${type} de $${transaction.amount}`
     const confirmed = await confirmDelete(itemName)
     if (!confirmed) return
 
@@ -134,8 +135,9 @@ export function useTransactions() {
       await deleteTransaction(transaction.id)
       transactions.value = transactions.value.filter(t => t.id !== transaction.id)
       
-      // Invalidar cache del dashboard para refrescar estadísticas
+      // Invalidar cache del dashboard y refrescar estadísticas
       invalidateDashboardCache()
+      await refreshStats()
       
       await showSuccess(`${type.charAt(0).toUpperCase() + type.slice(1)} eliminado exitosamente`)
     } catch (err) {

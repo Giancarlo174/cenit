@@ -12,7 +12,7 @@
       :disabled="disabled"
       :class="selectClasses"
     >
-      <option v-if="placeholder" :value="null">{{ placeholder }}</option>
+      <option v-if="placeholder" value="">{{ placeholder }}</option>
       <option
         v-for="option in options"
         :key="option[valueKey]"
@@ -87,7 +87,7 @@ const selectClasses = computed(() => {
 })
 
 const handleChange = (event) => {
-  const value = event.target.value === 'null' ? null : event.target.value
+  const value = event.target.value === '' ? null : event.target.value
   emit('update:modelValue', value)
   emit('change', value)
 }

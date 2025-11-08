@@ -3,13 +3,20 @@
  * Lógica de negocio pura para transacciones (ingresos y gastos)
  */
 
+// Constantes de validación
+export const VALIDATION_RULES = {
+  MIN_NAME_LENGTH: 3,
+  MAX_NAME_LENGTH: 40,
+  MIN_AMOUNT: 0.01
+}
+
 /**
  * Valida los datos de una transacción
  * @param {Object} data - Datos de la transacción
  * @param {number} data.amount - Monto
  * @param {string} data.category_id - ID de categoría
  * @param {string} data.type - Tipo (income o expense)
- * @param {string} [data.description] - Descripción opcional
+ * @param {string} data.name - Nombre de la transacción
  * @param {string} [data.transaction_date] - Fecha de la transacción
  * @returns {{isValid: boolean, errors: string[]}}
  */
@@ -28,8 +35,16 @@ export const validateTransactionData = (data) => {
     errors.push('El tipo debe ser "ingreso" o "gasto"')
   }
 
-  if (data.description && data.description.length > 500) {
-    errors.push('La descripción no puede exceder 500 caracteres')
+  if (!data.name?.trim()) {
+    errors.push('El nombre es obligatorio')
+  }
+
+  if (data.name?.trim().length < VALIDATION_RULES.MIN_NAME_LENGTH) {
+    errors.push(`El nombre debe tener al menos ${VALIDATION_RULES.MIN_NAME_LENGTH} caracteres`)
+  }
+
+  if (data.name?.trim().length > VALIDATION_RULES.MAX_NAME_LENGTH) {
+    errors.push(`El nombre no puede exceder ${VALIDATION_RULES.MAX_NAME_LENGTH} caracteres`)
   }
 
   return { isValid: errors.length === 0, errors }
@@ -47,7 +62,7 @@ export const transformDataForDB = (data, userId) => {
     category_id: data.category_id,
     type: data.type,
     amount: parseFloat(data.amount),
-    description: data.description?.trim() || null,
+    name: data.name.trim(),
     transaction_date: data.transaction_date || new Date().toISOString().split('T')[0]
   }
 }
@@ -64,7 +79,7 @@ export const transformDataFromDB = (dbData) => {
     categoryId: dbData.category_id,
     type: dbData.type,
     amount: parseFloat(dbData.amount),
-    description: dbData.description || '',
+    name: dbData.name || '',
     transactionDate: dbData.transaction_date,
     createdAt: dbData.created_at
   }

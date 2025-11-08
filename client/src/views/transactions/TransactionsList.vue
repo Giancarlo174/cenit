@@ -171,10 +171,10 @@
               />
             </div>
             
-            <!-- Info (Descripción + Fecha) -->
+            <!-- Info (Nombre + Fecha) -->
             <div class="flex-1 min-w-0">
               <h3 class="font-semibold text-gray-900 break-words">
-                {{ transaction.description || 'Sin descripción' }}
+                {{ transaction.name || 'Sin nombre' }}
               </h3>
               <p class="text-sm text-gray-500 mt-1">
                 {{ formatDate(transaction.transactionDate) }}
