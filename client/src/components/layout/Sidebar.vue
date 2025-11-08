@@ -1,5 +1,8 @@
 <template>
-  <aside class="sidebar">
+  <aside 
+    class="sidebar"
+    :class="{ 'sidebar-mobile-open': isMobileMenuOpen }"
+  >
     <!-- Header / Perfil de Usuario -->
     <div class="sidebar-header">
       <div class="flex items-center gap-3">
@@ -15,6 +18,15 @@
           </p>
         </div>
       </div>
+      
+      <!-- Botón cerrar en móvil -->
+      <button 
+        @click="$emit('close')"
+        class="mobile-close-button md:hidden"
+        aria-label="Cerrar menú"
+      >
+        <Icon name="mdi:close" :size="24" />
+      </button>
     </div>
 
     <!-- Navegación Principal -->
@@ -116,6 +128,17 @@ import { confirmAction } from '@/modules/notifications'
 import { formatCurrency } from '@/utils/formatters'
 import Icon from '@/components/UI/Icon.vue'
 
+// Props
+defineProps({
+  isMobileMenuOpen: {
+    type: Boolean,
+    default: false
+  }
+})
+
+// Emits
+defineEmits(['close'])
+
 const route = useRoute()
 const { logout, loading } = useAuth()
 const { username } = useProfile()
@@ -143,3 +166,30 @@ const handleLogout = async () => {
   }
 }
 </script>
+
+<style scoped>
+.mobile-close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  color: #374151;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-close-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* Ocultar botón X en desktop (768px+) */
+@media (min-width: 768px) {
+  .mobile-close-button {
+    display: none;
+  }
+}
+</style>

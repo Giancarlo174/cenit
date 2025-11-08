@@ -32,6 +32,22 @@ export const getAll = async (userId, options = {}) => {
     // Transformar datos desde DB
     let transactions = data.map(item => transformDataFromDB(item))
 
+    // Ordenar por fecha descendente y luego por created_at descendente (más reciente primero)
+    transactions.sort((a, b) => {
+      const dateA = new Date(a.transactionDate)
+      const dateB = new Date(b.transactionDate)
+      
+      // Primero ordenar por fecha de transacción (descendente)
+      if (dateB.getTime() !== dateA.getTime()) {
+        return dateB - dateA
+      }
+      
+      // Si las fechas son iguales, ordenar por created_at (descendente)
+      const createdA = new Date(a.createdAt)
+      const createdB = new Date(b.createdAt)
+      return createdB - createdA
+    })
+
     // Filtrar por rango de fechas si se especifica
     if (options.startDate && options.endDate) {
       transactions = transactions.filter(t => {
