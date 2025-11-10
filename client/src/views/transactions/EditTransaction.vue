@@ -19,42 +19,18 @@
         :error="errors.amount"
       />
 
-      <!-- Categoría -->
-      <div>
+      <!-- Categoría (solo si hay categorías del tipo) -->
+      <div v-if="hasCategoriesOfType">
         <Select
           v-model="form.category_id"
           :options="filteredCategories"
-          label="Categoría"
-          placeholder="Selecciona una categoría"
+          :label="`Categoría de ${transactionType === 'income' ? 'ingreso' : 'gasto'}`"
+          placeholder="Sin categoría"
           value-key="id"
           label-key="name"
-          required
           :error="errors.category"
         />
-        
-        <!-- Mensaje cuando no hay categorías -->
-        <div v-if="!hasCategoriesOfType" class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div class="flex items-start gap-2">
-            <Icon name="mdi:alert-circle" :size="20" class="text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div class="flex-1">
-              <p class="text-sm text-yellow-800 font-medium mb-1">
-                No tienes categorías de {{ transactionType === 'income' ? 'ingresos' : 'gastos' }}
-              </p>
-              <p class="text-xs text-yellow-700 mb-2">
-                Para editar este {{ transactionType === 'income' ? 'ingreso' : 'gasto' }} necesitas al menos una categoría de ese tipo.
-              </p>
-              <Button
-                variant="secondary"
-                icon="mdi:plus"
-                type="button"
-                @click="goToCategories"
-                class="text-sm px-3 py-1.5"
-              >
-                Crear Categoría
-              </Button>
-            </div>
-          </div>
-        </div>
+   
       </div>
 
       <!-- Nombre -->
@@ -120,7 +96,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useTransactions } from '@/composables/useTransactions'
 import { useCategories } from '@/composables/useCategories'
 import { validateTransactionData } from '@/modules/transactions'
@@ -129,7 +104,6 @@ import Button from '@/components/UI/Button.vue'
 import Modal from '@/components/UI/Modal.vue'
 import Input from '@/components/UI/Input.vue'
 import Select from '@/components/UI/Select.vue'
-import Icon from '@/components/UI/Icon.vue'
 
 const props = defineProps({
   transaction: {
@@ -139,7 +113,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'updated'])
-const router = useRouter()
 
 const { updateTransaction } = useTransactions()
 const { incomeCategories, expenseCategories, fetchCategories } = useCategories()
@@ -175,10 +148,7 @@ const errors = ref({
 // Validación visual para deshabilitar botón
 const isFormValid = computed(() => {
   return form.value.amount > 0 && 
-         form.value.category_id !== null && 
-         form.value.category_id !== '' && 
          form.value.name?.trim().length >= 3 &&
-         hasCategoriesOfType.value && 
          !loading.value
 })
 
@@ -210,11 +180,6 @@ const validateForm = () => {
   }
   
   return true
-}
-
-const goToCategories = () => {
-  emit('close')
-  router.push('/categories')
 }
 
 const handleSubmit = async () => {

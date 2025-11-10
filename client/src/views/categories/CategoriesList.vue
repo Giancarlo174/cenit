@@ -63,7 +63,7 @@
     <Card v-else-if="!hasCategories" class="empty-state">
       <Icon name="material-symbols:category-outline" :size="64" class="text-gray-400 mx-auto mb-4" />
       <h3 class="text-lg font-semibold text-gray-700 mb-2">No tienes categorías</h3>
-      <p class="text-gray-500">Crea tu primera categoría para empezar a organizar tus gastos</p>
+      <p class="text-gray-500">Crea tu primera categoría para empezar a organizar tus transacciones</p>
     </Card>
 
     <!-- Lista de Categorías -->
