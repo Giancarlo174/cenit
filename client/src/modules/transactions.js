@@ -14,7 +14,7 @@ export const VALIDATION_RULES = {
  * Valida los datos de una transacción
  * @param {Object} data - Datos de la transacción
  * @param {number} data.amount - Monto
- * @param {string} data.category_id - ID de categoría
+ * @param {string} [data.category_id] - ID de categoría (opcional)
  * @param {string} data.type - Tipo (income o expense)
  * @param {string} data.name - Nombre de la transacción
  * @param {string} [data.transaction_date] - Fecha de la transacción
@@ -25,10 +25,6 @@ export const validateTransactionData = (data) => {
 
   if (!data.amount || data.amount <= 0) {
     errors.push('El monto debe ser mayor a 0')
-  }
-
-  if (!data.category_id?.trim()) {
-    errors.push('Debe seleccionar una categoría')
   }
 
   if (!data.type || !['income', 'expense'].includes(data.type)) {
@@ -57,13 +53,22 @@ export const validateTransactionData = (data) => {
  * @returns {Object} Datos formateados para Supabase
  */
 export const transformDataForDB = (data, userId) => {
+  // Obtener fecha actual en zona horaria local si no se proporciona
+  const getCurrentDateLocal = () => {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   return {
     user_id: userId,
-    category_id: data.category_id,
+    category_id: data.category_id || null,
     type: data.type,
     amount: parseFloat(data.amount),
     name: data.name.trim(),
-    transaction_date: data.transaction_date || new Date().toISOString().split('T')[0]
+    transaction_date: data.transaction_date || getCurrentDateLocal()
   }
 }
 
@@ -76,7 +81,8 @@ export const transformDataFromDB = (dbData) => {
   return {
     id: dbData.id,
     userId: dbData.user_id,
-    categoryId: dbData.category_id,
+    categoryId: dbData.category_id || null,
+    categoryName: dbData.categories?.name || 'Sin categoría',
     type: dbData.type,
     amount: parseFloat(dbData.amount),
     name: dbData.name || '',
@@ -145,7 +151,7 @@ export const filterByType = (transactions, type) => {
  */
 export const filterByDateRange = (transactions, startDate, endDate) => {
   return transactions.filter(t => {
-    const date = new Date(t.transactionDate)
-    return date >= new Date(startDate) && date <= new Date(endDate)
+    // Comparar strings directamente (YYYY-MM-DD se compara alfabéticamente correcto)
+    return t.transactionDate >= startDate && t.transactionDate <= endDate
   })
 }

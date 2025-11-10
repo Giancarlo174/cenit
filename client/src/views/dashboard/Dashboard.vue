@@ -80,7 +80,8 @@
         </Card>
       </div>
 
-      <!-- Gráfico y Lista -->
+      <!-- Gráfico y Listas por Categoría -->
+      <!-- Categorías (2 columnas en desktop, 1 en mobile) -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <!-- Gastos por Categoría -->
         <Card>
@@ -90,14 +91,14 @@
 
           <div v-if="expensesByCategory.length > 0" class="space-y-3 sm:space-y-4 overflow-x-auto">
             <div 
-              v-for="category in expensesByCategory.slice(0, 10)" 
+              v-for="category in expensesByCategory.slice(0, 5)" 
               :key="category.id"
               class="space-y-2 min-w-max sm:min-w-0"
             >
               <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                  <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                    <Icon name="material-symbols:category" :size="18" class="text-purple-600 sm:w-5 sm:h-5" />
+                  <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <Icon name="material-symbols:category" :size="18" class="text-red-600 sm:w-5 sm:h-5" />
                   </div>
                   <div>
                     <p class="text-sm sm:text-base font-medium text-gray-900 whitespace-nowrap">{{ category.name }}</p>
@@ -113,7 +114,7 @@
               <!-- Barra de progreso -->
               <div class="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                  class="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                  class="bg-red-600 h-2 rounded-full transition-all duration-300"
                   :style="{ width: `${category.percentage}%` }"
                 ></div>
               </div>
@@ -122,69 +123,156 @@
 
           <div v-else class="text-center py-8 text-gray-500">
             <Icon name="material-symbols:category-outline" :size="48" class="text-gray-400 mx-auto mb-2" />
-            <p class="text-sm">No hay datos por categoría</p>
+            <p class="text-sm">No hay gastos por categoría</p>
           </div>
         </Card>
 
-        <!-- Gastos Recientes -->
+        <!-- Ingresos por Categoría -->
         <Card>
           <template #header>
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900">Gastos Recientes</h3>
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900">Ingresos por Categoría</h3>
           </template>
 
-          <div v-if="recentTransactions.length > 0" class="space-y-2 sm:space-y-3 overflow-x-auto">
+          <div v-if="incomeByCategory.length > 0" class="space-y-3 sm:space-y-4 overflow-x-auto">
             <div 
-              v-for="transaction in recentTransactions.slice(0, 10)" 
-              :key="transaction.id"
-              class="flex items-center justify-between p-2 sm:p-3 rounded-lg hover:bg-gray-50 transition-colors min-w-max sm:min-w-0 gap-3"
+              v-for="category in incomeByCategory.slice(0, 5)" 
+              :key="category.id"
+              class="space-y-2 min-w-max sm:min-w-0"
             >
-              <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                <div :class="[
-                  'w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0',
-                  transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
-                ]">
-                  <Icon 
-                    :name="transaction.type === 'income' ? 'mdi:cash-plus' : 'mdi:cash-minus'" 
-                    :size="18" 
-                    :class="[
-                      'sm:w-5 sm:h-5',
-                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                    ]" 
-                  />
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                  <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <Icon name="material-symbols:category" :size="18" class="text-green-600 sm:w-5 sm:h-5" />
+                  </div>
+                  <div>
+                    <p class="text-sm sm:text-base font-medium text-gray-900 whitespace-nowrap">{{ category.name }}</p>
+                    <p class="text-xs text-gray-500 whitespace-nowrap">{{ category.count }} {{ category.count === 1 ? 'ingreso' : 'ingresos' }}</p>
+                  </div>
                 </div>
-                <div>
-                  <p class="text-sm sm:text-base font-medium text-gray-900 whitespace-nowrap">
-                    {{ transaction.description || 'Sin descripción' }}
-                  </p>
-                  <p class="text-xs text-gray-500 whitespace-nowrap">
-                    {{ formatDate(transaction.transactionDate) }}
-                  </p>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-sm sm:text-base font-semibold text-gray-900 whitespace-nowrap">{{ formatCurrency(category.total) }}</p>
+                  <p class="text-xs text-gray-500 whitespace-nowrap">{{ category.percentage.toFixed(1) }}%</p>
                 </div>
               </div>
-              <p :class="[
-                'text-sm sm:text-base font-semibold flex-shrink-0 whitespace-nowrap',
-                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-              ]">
-                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
-              </p>
+              
+              <!-- Barra de progreso -->
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  class="bg-green-600 h-2 rounded-full transition-all duration-300"
+                  :style="{ width: `${category.percentage}%` }"
+                ></div>
+              </div>
             </div>
           </div>
 
           <div v-else class="text-center py-8 text-gray-500">
-            <Icon name="mdi:cash-remove" :size="48" class="text-gray-400 mx-auto mb-2" />
-            <p class="text-sm">No hay gastos recientes</p>
+            <Icon name="material-symbols:category-outline" :size="48" class="text-gray-400 mx-auto mb-2" />
+            <p class="text-sm">No hay ingresos por categoría</p>
           </div>
         </Card>
       </div>
+
+      <!-- Gráfico de Ingresos vs Gastos (ancho completo) -->
+      <Card>
+        <template #header>
+          <div class="flex flex-col gap-4">
+            <!-- Título y selector de periodo -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h3 class="text-base sm:text-lg font-semibold text-gray-900">Ingresos vs Gastos</h3>
+              
+              <!-- Selector de periodo -->
+              <div class="flex gap-1">
+                <button
+                  v-for="periodOption in periodOptions"
+                  :key="periodOption.value"
+                  @click="setPeriod(periodOption.value)"
+                  :class="[
+                    'px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
+                    period === periodOption.value
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ]"
+                >
+                  {{ periodOption.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Selectores jerárquicos según el modo -->
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- Selector de Año (visible en todos los modos) -->
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Año:</label>
+                <select
+                  v-model.number="selectedYear"
+                  @change="setYear(selectedYear)"
+                  class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option v-for="year in availableYears" :key="year" :value="year">
+                    {{ year }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Selector de Mes (visible en modo "Días" y "Semanas") -->
+              <div v-if="period === 'day' || period === 'week'" class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Mes:</label>
+                <select
+                  v-model.number="selectedMonth"
+                  @change="setMonth(selectedMonth)"
+                  class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option v-for="month in 12" :key="month" :value="month">
+                    {{ getMonthName(month) }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Selector de Semana (visible solo en modo "Días") -->
+              <div v-if="period === 'day'" class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Semana:</label>
+                <select
+                  v-model.number="selectedWeek"
+                  @change="setWeek(selectedWeek)"
+                  class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option v-for="week in availableWeeks" :key="week" :value="week">
+                    {{ getWeekLabel(week) }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Botón HOY -->
+              <Button
+                variant="secondary"
+                @click="goToToday"
+                class="px-3 py-1.5 text-sm font-medium ml-auto"
+              >
+                HOY
+              </Button>
+            </div>
+
+            <!-- Label descriptivo del periodo -->
+            <p class="text-sm font-medium text-gray-600 border-t pt-3">
+              {{ periodLabel }}
+            </p>
+          </div>
+        </template>
+
+        <!-- Gráfico -->
+        <BarChart :data="chartData" :period="period" />
+      </Card>
     </div>
   </div>
 </template>
 
 <script setup>
 import { useDashboard } from '@/composables/useDashboard'
-import { formatCurrency, formatDate } from '@/utils/formatters'
+import { formatCurrency } from '@/utils/formatters'
 import Card from '@/components/UI/Card.vue'
+import Button from '@/components/UI/Button.vue'
 import Icon from '@/components/UI/Icon.vue'
+import BarChart from '@/components/UI/BarChart.vue'
 
 const {
   stats,
@@ -193,7 +281,55 @@ const {
   totalIncome,
   totalExpenses,
   expensesByCategory,
-  recentTransactions,
-  hasData
+  incomeByCategory,
+  hasData,
+  period,
+  selectedYear,
+  selectedMonth,
+  selectedWeek,
+  availableYears,
+  availableWeeks,
+  chartData,
+  periodLabel,
+  setPeriod,
+  setYear,
+  setMonth,
+  setWeek,
+  goToToday
 } = useDashboard()
+
+// Opciones de periodo
+const periodOptions = [
+  { value: 'day', label: 'Días' },
+  { value: 'week', label: 'Semanas' },
+  { value: 'month', label: 'Meses' }
+]
+
+/**
+ * Obtiene el nombre del mes en español
+ * @param {number} month - Número del mes (1-12)
+ */
+const getMonthName = (month) => {
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
+  return monthNames[month - 1]
+}
+
+/**
+ * Obtiene el label de la semana con rango de días
+ * @param {number} weekNumber - Número de semana (1-5)
+ * @returns {string} Label con rango de días (ej: "Semana 1-7")
+ */
+const getWeekLabel = (weekNumber) => {
+  const startDay = (weekNumber - 1) * 7 + 1
+  
+  // Calcular el último día del mes seleccionado
+  const lastDayOfMonth = new Date(selectedYear.value, selectedMonth.value, 0).getDate()
+  const endDay = Math.min(weekNumber * 7, lastDayOfMonth)
+  
+  return `Semana ${startDay}-${endDay}`
+}
 </script>
+

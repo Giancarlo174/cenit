@@ -2,7 +2,6 @@
   <div class="space-y-2">
     <label v-if="label" class="block text-sm font-medium text-gray-700">
       {{ label }}
-      <span v-if="!required && label" class="text-gray-400 text-xs">(Opcional)</span>
     </label>
     
     <select

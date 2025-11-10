@@ -8,7 +8,7 @@
 }
 
 .page-header {
-  @apply flex items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200;
+  @apply flex flex-wrap items-center justify-between gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200;
 }
 
 /* Empty states */

@@ -1,6 +1,6 @@
 <template>
   <Modal 
-    :title="`Nuevo ${props.type === 'income' ? 'Ingreso' : 'Gasto'}`" 
+    title="Nueva Transacción" 
     size="md"
     :loading="loading"
     :show-close-button="false"
@@ -19,42 +19,73 @@
         :error="errors.amount"
       />
 
-      <!-- Categoría -->
+      <!-- Tipo de Transacción -->
       <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Tipo de Transacción <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            @click="form.type = 'income'"
+            :class="[
+              'p-4 rounded-lg border-2 transition-all',
+              form.type === 'income' 
+                ? 'border-green-500 bg-green-50' 
+                : 'border-gray-200 hover:border-green-300 bg-white'
+            ]"
+          >
+            <Icon name="mdi:cash-plus" :class="[
+              'mx-auto',
+              form.type === 'income' ? 'text-green-600' : 'text-gray-400'
+            ]" :size="32" />
+            <p :class="[
+              'font-medium mt-2 text-sm',
+              form.type === 'income' ? 'text-green-700' : 'text-gray-600'
+            ]">
+              Ingreso
+            </p>
+          </button>
+          
+          <button
+            type="button"
+            @click="form.type = 'expense'"
+            :class="[
+              'p-4 rounded-lg border-2 transition-all',
+              form.type === 'expense' 
+                ? 'border-red-500 bg-red-50' 
+                : 'border-gray-200 hover:border-red-300 bg-white'
+            ]"
+          >
+            <Icon name="mdi:cash-minus" :class="[
+              'mx-auto',
+              form.type === 'expense' ? 'text-red-600' : 'text-gray-400'
+            ]" :size="32" />
+            <p :class="[
+              'font-medium mt-2 text-sm',
+              form.type === 'expense' ? 'text-red-700' : 'text-gray-600'
+            ]">
+              Gasto
+            </p>
+          </button>
+        </div>
+        <p v-if="errors.type" class="text-sm text-red-600 mt-1">{{ errors.type }}</p>
+      </div>
+
+      <!-- Categoría (solo si hay categorías del tipo seleccionado) -->
+      <div v-if="form.type && hasCategoriesOfType">
         <Select
           v-model="form.category_id"
           :options="filteredCategories"
-          label="Categoría"
-          placeholder="Selecciona una categoría"
+          :label="`Categoría de ${form.type === 'income' ? 'ingreso' : 'gasto'}`"
+          placeholder="Sin categoría (opcional)"
           value-key="id"
           label-key="name"
-          required
           :error="errors.category"
         />
-        
-        <!-- Mensaje cuando no hay categorías -->
-        <div v-if="!hasCategoriesOfType" class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div class="flex items-start gap-2">
-            <Icon name="mdi:alert-circle" :size="20" class="text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div class="flex-1">
-              <p class="text-sm text-yellow-800 font-medium mb-1">
-                No tienes categorías de {{ props.type === 'income' ? 'ingresos' : 'gastos' }}
-              </p>
-              <p class="text-xs text-yellow-700 mb-2">
-                Para registrar un {{ props.type === 'income' ? 'ingreso' : 'gasto' }} necesitas primero crear al menos una categoría de ese tipo.
-              </p>
-              <Button
-                variant="secondary"
-                icon="mdi:plus"
-                type="button"
-                @click="goToCategories"
-                class="text-sm px-3 py-1.5"
-              >
-                Crear Categoría
-              </Button>
-            </div>
-          </div>
-        </div>
+        <p class="text-xs text-gray-500 mt-1">
+          Puedes dejar sin categoría y organizarla después
+        </p>
       </div>
 
       <!-- Nombre -->
@@ -62,7 +93,7 @@
         v-model="form.name"
         type="text"
         label="Nombre"
-        :placeholder="`¿${props.type === 'income' ? 'De dónde proviene' : 'En qué gastaste'}?`"
+        :placeholder="namePlaceholder"
         :maxlength="40"
         required
         :error="errors.name"
@@ -72,27 +103,27 @@
       <Input
         v-model="form.transaction_date"
         type="date"
-        :label="`Fecha del ${props.type === 'income' ? 'ingreso' : 'gasto'}`"
+        label="Fecha de la transacción"
         hint="Si no se especifica, se usará la fecha actual"
       />
 
       <!-- Resumen previo -->
-      <div v-if="form.amount > 0" :class="[
+      <div v-if="form.amount > 0 && form.type" :class="[
         'p-4 rounded-lg border',
-        props.type === 'income' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+        form.type === 'income' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
       ]">
         <div class="flex items-center justify-between text-sm">
           <span :class="[
             'font-medium',
-            props.type === 'income' ? 'text-green-700' : 'text-red-700'
+            form.type === 'income' ? 'text-green-700' : 'text-red-700'
           ]">
             Monto a registrar:
           </span>
           <span :class="[
             'text-xl font-bold',
-            props.type === 'income' ? 'text-green-600' : 'text-red-600'
+            form.type === 'income' ? 'text-green-600' : 'text-red-600'
           ]">
-            {{ props.type === 'income' ? '+' : '-' }}{{ formatCurrency(form.amount) }}
+            {{ form.type === 'income' ? '+' : '-' }}{{ formatCurrency(form.amount) }}
           </span>
         </div>
       </div>
@@ -112,7 +143,7 @@
           :disabled="!isFormValid"
           :loading="loading"
         >
-          Registrar {{ props.type === 'income' ? 'Ingreso' : 'Gasto' }}
+          Registrar Transacción
         </Button>
       </div>
     </form>
@@ -130,16 +161,7 @@ import Button from '@/components/UI/Button.vue'
 import Modal from '@/components/UI/Modal.vue'
 import Input from '@/components/UI/Input.vue'
 import Select from '@/components/UI/Select.vue'
-import Textarea from '@/components/UI/Textarea.vue'
 import Icon from '@/components/UI/Icon.vue'
-
-const props = defineProps({
-  type: {
-    type: String,
-    required: true,
-    validator: (value) => ['income', 'expense'].includes(value)
-  }
-})
 
 const emit = defineEmits(['close', 'created'])
 const router = useRouter()
@@ -149,15 +171,26 @@ const { incomeCategories, expenseCategories, fetchCategories } = useCategories()
 
 // Categorías filtradas según el tipo
 const filteredCategories = computed(() => {
-  return props.type === 'income' ? incomeCategories.value : expenseCategories.value
+  if (!form.value.type) return []
+  return form.value.type === 'income' ? incomeCategories.value : expenseCategories.value
 })
 
 const hasCategoriesOfType = computed(() => {
   return filteredCategories.value.length > 0
 })
 
+// Placeholder dinámico según tipo de transacción
+const namePlaceholder = computed(() => {
+  if (!form.value.type) {
+    return '¿De dónde proviene esta transacción?'
+  }
+  return form.value.type === 'income' 
+    ? '¿De dónde proviene este ingreso?' 
+    : '¿En qué gastaste?'
+})
+
 const form = ref({
-  type: props.type,
+  type: null,
   amount: null,
   category_id: null,
   name: '',
@@ -167,6 +200,7 @@ const form = ref({
 const loading = ref(false)
 const errors = ref({
   amount: null,
+  type: null,
   category: null,
   name: null
 })
@@ -174,10 +208,8 @@ const errors = ref({
 // Validación visual para deshabilitar botón
 const isFormValid = computed(() => {
   return form.value.amount > 0 && 
-         form.value.category_id !== null && 
-         form.value.category_id !== '' && 
+         form.value.type !== null &&
          form.value.name?.trim().length >= 3 &&
-         hasCategoriesOfType.value && 
          !loading.value
 })
 
@@ -189,8 +221,14 @@ onMounted(async () => {
 const validateForm = () => {
   errors.value = {
     amount: null,
+    type: null,
     category: null,
     name: null
+  }
+  
+  if (!form.value.type) {
+    errors.value.type = 'Debe seleccionar un tipo de transacción'
+    return false
   }
   
   const validation = validateTransactionData(form.value)
@@ -199,8 +237,8 @@ const validateForm = () => {
     validation.errors.forEach(error => {
       if (error.includes('monto')) {
         errors.value.amount = error
-      } else if (error.includes('categoría')) {
-        errors.value.category = error
+      } else if (error.includes('tipo')) {
+        errors.value.type = error
       } else if (error.includes('nombre')) {
         errors.value.name = error
       }
@@ -209,11 +247,6 @@ const validateForm = () => {
   }
   
   return true
-}
-
-const goToCategories = () => {
-  emit('close')
-  router.push('/categories')
 }
 
 const handleSubmit = async () => {

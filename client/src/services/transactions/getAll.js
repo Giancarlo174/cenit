@@ -33,26 +33,23 @@ export const getAll = async (userId, options = {}) => {
     let transactions = data.map(item => transformDataFromDB(item))
 
     // Ordenar por fecha descendente y luego por created_at descendente (más reciente primero)
+    // Comparar strings directamente para evitar problemas de zona horaria
     transactions.sort((a, b) => {
-      const dateA = new Date(a.transactionDate)
-      const dateB = new Date(b.transactionDate)
-      
       // Primero ordenar por fecha de transacción (descendente)
-      if (dateB.getTime() !== dateA.getTime()) {
-        return dateB - dateA
+      // YYYY-MM-DD se compara correctamente alfabéticamente
+      if (b.transactionDate !== a.transactionDate) {
+        return b.transactionDate.localeCompare(a.transactionDate)
       }
       
       // Si las fechas son iguales, ordenar por created_at (descendente)
-      const createdA = new Date(a.createdAt)
-      const createdB = new Date(b.createdAt)
-      return createdB - createdA
+      return b.createdAt.localeCompare(a.createdAt)
     })
 
     // Filtrar por rango de fechas si se especifica
     if (options.startDate && options.endDate) {
       transactions = transactions.filter(t => {
-        const date = new Date(t.transactionDate)
-        return date >= new Date(options.startDate) && date <= new Date(options.endDate)
+        // Comparar strings directamente (YYYY-MM-DD)
+        return t.transactionDate >= options.startDate && t.transactionDate <= options.endDate
       })
     }
 
