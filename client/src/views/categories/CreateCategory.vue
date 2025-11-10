@@ -10,6 +10,7 @@
         v-model="form.name"
         label="Nombre de la categoría"
         placeholder="Ej: Salario, Comida, Transporte..."
+        :maxlength="30"
         required
         :error="errors.name"
         @blur="validateOnBlur"

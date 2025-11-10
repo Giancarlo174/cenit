@@ -7,10 +7,12 @@ import { ref, computed, watch } from 'vue'
 import { getAll } from '@/services/categories/getAll'
 import { create } from '@/services/categories/create'
 import { deleteCategory } from '@/services/categories/delete'
+import { updateCategory } from '@/services/categories/update'
 import { showSuccess, showError, confirmDelete } from '@/modules/notifications'
 import { getIncomeCategories, getExpenseCategories } from '@/modules/categories'
 import { useAuth } from '@/composables/useAuth'
 import { useDashboard } from '@/composables/useDashboard'
+import { useTransactions } from '@/composables/useTransactions'
 
 // Estado global de categorías (singleton pattern)
 const categories = ref([])
@@ -18,12 +20,31 @@ const loading = ref(false)
 const error = ref(null)
 const searchTerm = ref('')
 const selectedType = ref(null) // 'income' | 'expense' | null (todas)
+const sortOrder = ref(null) // 'asc' (A-Z) | 'desc' (Z-A) | null (sin orden)
+const currentPage = ref(1)
+const itemsPerPage = ref(15)
 let hasInitialized = false
 
 export function useCategories() {
   // Obtener userId del sistema de autenticación
   const { userId } = useAuth()
   const { invalidateCache: invalidateDashboardCache } = useDashboard()
+  
+  // Obtener transacciones para calcular montos por categoría
+  const { transactions } = useTransactions()
+
+  /**
+   * Calcula el monto total de transacciones para una categoría
+   * @param {string} categoryId - ID de la categoría
+   * @returns {number} Monto total
+   */
+  const calculateCategoryAmount = (categoryId) => {
+    if (!categoryId) return 0
+    
+    return transactions.value
+      .filter(t => t.categoryId === categoryId)
+      .reduce((sum, t) => sum + t.amount, 0)
+  }
 
   // Categorías filtradas por búsqueda y tipo
   const filteredCategories = computed(() => {
@@ -43,7 +64,53 @@ export function useCategories() {
       )
     }
 
+    // Ordenar por monto si está seleccionado
+    if (sortOrder.value) {
+      filtered = [...filtered].sort((a, b) => {
+        const amountA = calculateCategoryAmount(a.id)
+        const amountB = calculateCategoryAmount(b.id)
+        
+        if (sortOrder.value === 'desc') {
+          return amountB - amountA // Mayor a menor
+        } else {
+          return amountA - amountB // Menor a mayor
+        }
+      })
+    }
+
     return filtered
+  })
+
+  // Total de items filtrados
+  const totalItems = computed(() => filteredCategories.value.length)
+
+  // Total de páginas
+  const totalPages = computed(() => 
+    Math.ceil(filteredCategories.value.length / itemsPerPage.value)
+  )
+
+  // Índices para paginación
+  const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
+  const endIndex = computed(() => startIndex.value + itemsPerPage.value)
+
+  // Categorías paginadas
+  const paginatedCategories = computed(() => {
+    return filteredCategories.value.slice(startIndex.value, endIndex.value)
+  })
+
+  // Categorías paginadas enriquecidas con monto total
+  const paginatedCategoriesWithAmount = computed(() => {
+    return paginatedCategories.value.map(category => ({
+      ...category,
+      totalAmount: calculateCategoryAmount(category.id)
+    }))
+  })
+
+  // Información de paginación para mostrar "Mostrando X-Y de Z"
+  const paginationInfo = computed(() => {
+    const start = totalItems.value === 0 ? 0 : startIndex.value + 1
+    const end = Math.min(endIndex.value, totalItems.value)
+    return { start, end, total: totalItems.value }
   })
 
   // Solo categorías de ingresos
@@ -136,12 +203,113 @@ export function useCategories() {
   }
 
   /**
+   * Actualiza una categoría existente
+   * @param {string} categoryId - ID de la categoría
+   * @param {Object} categoryData - Datos actualizados
+   */
+  const updateCategoryData = async (categoryId, categoryData) => {
+    if (!userId.value) return
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const updatedCategory = await updateCategory(categoryId, categoryData, userId.value)
+      
+      // Actualizar en el array local
+      const index = categories.value.findIndex(c => c.id === categoryId)
+      if (index !== -1) {
+        categories.value[index] = updatedCategory
+      }
+      
+      await showSuccess('Categoría actualizada exitosamente')
+      invalidateDashboardCache()
+      return updatedCategory
+    } catch (err) {
+      error.value = err.message
+      await showError(err.message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * Establece el filtro por tipo
    * @param {'income' | 'expense' | null} type - Tipo a filtrar
    */
   const setTypeFilter = (type) => {
     selectedType.value = type
+    currentPage.value = 1 // Resetear a página 1 al cambiar filtro
   }
+
+  /**
+   * Limpia todos los filtros aplicados
+   */
+  const clearFilters = () => {
+    searchTerm.value = ''
+    selectedType.value = null
+    sortOrder.value = null
+    currentPage.value = 1
+  }
+
+  /**
+   * Cambia a una página específica
+   * @param {number} page - Número de página
+   */
+  const setPage = (page) => {
+    if (page >= 1 && page <= totalPages.value) {
+      currentPage.value = page
+    }
+  }
+
+  /**
+   * Avanza a la siguiente página
+   */
+  const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+      currentPage.value++
+    }
+  }
+
+  /**
+   * Retrocede a la página anterior
+   */
+  const prevPage = () => {
+    if (currentPage.value > 1) {
+      currentPage.value--
+    }
+  }
+
+  /**
+   * Va a la primera página
+   */
+  const firstPage = () => {
+    currentPage.value = 1
+  }
+
+  /**
+   * Va a la última página
+   */
+  const lastPage = () => {
+    if (totalPages.value > 0) {
+      currentPage.value = totalPages.value
+    }
+  }
+
+  /**
+   * Cambia la cantidad de items por página y resetea a página 1
+   * @param {number} value - Cantidad de items por página
+   */
+  const setItemsPerPage = (value) => {
+    itemsPerPage.value = value
+    currentPage.value = 1
+  }
+
+  // Watch para resetear página cuando cambien filtros
+  watch([searchTerm, sortOrder], () => {
+    currentPage.value = 1
+  })
 
   // Watch para cargar categorías cuando userId esté disponible
   // Solo se ejecuta una vez gracias a hasInitialized
@@ -158,6 +326,9 @@ export function useCategories() {
           error.value = null
           searchTerm.value = ''
           selectedType.value = null
+          sortOrder.value = null
+          currentPage.value = 1
+          itemsPerPage.value = 15
           hasInitialized = false
         }
       },
@@ -169,22 +340,43 @@ export function useCategories() {
     // Estado
     categories,
     filteredCategories,
+    paginatedCategories,
+    paginatedCategoriesWithAmount,
     incomeCategories,
     expenseCategories,
     loading,
     error,
     searchTerm,
     selectedType,
+    sortOrder,
+    currentPage,
+    itemsPerPage,
     
     // Computed - Indicadores
     hasCategories,
     hasIncomeCategories,
     hasExpenseCategories,
     
+    // Computed - Paginación
+    totalItems,
+    totalPages,
+    paginationInfo,
+    
     // Métodos
     fetchCategories,
     createCategory,
     removeCategory,
-    setTypeFilter
+    updateCategoryData,
+    setTypeFilter,
+    clearFilters,
+    calculateCategoryAmount,
+    
+    // Métodos - Paginación
+    setPage,
+    nextPage,
+    prevPage,
+    firstPage,
+    lastPage,
+    setItemsPerPage
   }
 }

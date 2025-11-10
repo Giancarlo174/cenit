@@ -94,7 +94,7 @@
         type="text"
         label="Nombre"
         :placeholder="namePlaceholder"
-        :maxlength="40"
+        :maxlength="30"
         required
         :error="errors.name"
       />

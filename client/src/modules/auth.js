@@ -69,8 +69,8 @@ export const validateUsername = (username) => {
     return { isValid: false, error: 'El nombre de usuario debe tener al menos 2 caracteres' }
   }
 
-  if (username.trim().length > 50) {
-    return { isValid: false, error: 'El nombre de usuario no puede tener más de 50 caracteres' }
+  if (username.trim().length > 30) {
+    return { isValid: false, error: 'El nombre de usuario no puede tener más de 30 caracteres' }
   }
 
   return { isValid: true, error: null }

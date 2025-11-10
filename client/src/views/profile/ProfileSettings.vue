@@ -32,6 +32,7 @@
                 v-model="form.username"
                 type="text"
                 placeholder="Ingresa tu nombre"
+                :maxlength="30"
                 required
                 :disabled="loading"
               />

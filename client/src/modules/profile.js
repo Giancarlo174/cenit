@@ -20,8 +20,8 @@ export const validateProfileData = (data) => {
     errors.push('El nombre de usuario debe tener al menos 2 caracteres')
   }
 
-  if (data.username?.trim().length > 50) {
-    errors.push('El nombre de usuario no puede exceder 50 caracteres')
+  if (data.username?.trim().length > 30) {
+    errors.push('El nombre de usuario no puede exceder 30 caracteres')
   }
 
   return { isValid: errors.length === 0, errors }

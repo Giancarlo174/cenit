@@ -16,6 +16,13 @@
   @apply text-center py-12 px-4;
 }
 
+/* Word break para textos largos */
+.word-break {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
 /* Hover effect for cards */
 .hover-card {
   @apply transition-transform duration-200;
@@ -23,6 +30,16 @@
 
 .hover-card:hover {
   @apply -translate-y-1;
+}
+
+/* Category cards - Galería */
+.category-card {
+  @apply transition-all duration-200;
+  min-height: 280px;
+}
+
+.category-card:hover {
+  @apply -translate-y-2 shadow-lg;
 }
 
 /* Sidebar Layout */

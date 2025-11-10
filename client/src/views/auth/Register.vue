@@ -41,6 +41,7 @@
             v-model="form.username"
             type="text"
             placeholder="Ingresa tu primer nombre"
+            :maxlength="30"
             required
             :disabled="loading"
           />

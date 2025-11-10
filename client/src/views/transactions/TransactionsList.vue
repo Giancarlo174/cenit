@@ -161,9 +161,9 @@
         hover
         class="hover-card"
       >
-        <div class="flex flex-col min-[330px]:flex-row items-start min-[330px]:items-center justify-between gap-3">
+        <div class="flex flex-col min-[330px]:flex-row items-start justify-between gap-3">
           <!-- Contenido izquierdo: Ícono + Info -->
-          <div class="flex flex-col min-[330px]:flex-row items-start min-[330px]:items-center gap-3 flex-1 w-full min-[330px]:w-auto">
+          <div class="flex flex-col min-[330px]:flex-row items-start gap-3 flex-1 w-full min-[330px]:w-auto">
             <!-- Ícono -->
             <div :class="[
               'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0',
@@ -178,7 +178,7 @@
             
             <!-- Info (Nombre + Fecha) -->
             <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-gray-900 break-words">
+              <h3 class="font-semibold text-gray-900 break-words word-break">
                 {{ transaction.name || 'Sin nombre' }}
               </h3>
               <p class="text-sm text-gray-500 mt-1">
@@ -188,7 +188,7 @@
           </div>
           
           <!-- Contenido derecho: Monto + Botones Edit/Delete -->
-          <div class="flex flex-col min-[400px]:flex-row items-start min-[400px]:items-center gap-1 w-full min-[330px]:w-auto">
+          <div class="flex flex-col min-[400px]:flex-row items-start gap-1 w-full min-[330px]:w-auto min-[330px]:items-start">
             <p :class="[
               'text-lg font-bold min-[330px]:text-xl',
               transaction.type === 'income' ? 'text-green-600' : 'text-red-600'

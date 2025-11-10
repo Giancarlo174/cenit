@@ -39,7 +39,7 @@
         type="text"
         label="Nombre"
         :placeholder="`¿${transactionType === 'income' ? 'De dónde proviene' : 'En qué gastaste'}?`"
-        :maxlength="40"
+        :maxlength="30"
         required
         :error="errors.name"
       />

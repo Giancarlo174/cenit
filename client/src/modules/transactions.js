@@ -6,7 +6,7 @@
 // Constantes de validación
 export const VALIDATION_RULES = {
   MIN_NAME_LENGTH: 3,
-  MAX_NAME_LENGTH: 40,
+  MAX_NAME_LENGTH: 30,
   MIN_AMOUNT: 0.01
 }
 

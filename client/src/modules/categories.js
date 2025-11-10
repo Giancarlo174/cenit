@@ -6,7 +6,7 @@
 // Constantes de validación
 export const VALIDATION_RULES = {
   MIN_NAME_LENGTH: 2,
-  MAX_NAME_LENGTH: 100
+  MAX_NAME_LENGTH: 30
 }
 
 // Tipos de categorías permitidos
