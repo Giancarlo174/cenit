@@ -225,28 +225,22 @@
       @close="showCreateForm = false"
       @created="handleCreated"
     />
-
-    <!-- Modal Editar Categoría -->
-    <EditCategory
-      v-if="showEditForm && selectedCategory"
-      :category="selectedCategory"
-      @close="showEditForm = false"
-      @updated="handleUpdated"
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCategories } from '@/composables/useCategories'
-import { formatDate, formatCurrency } from '@/utils/formatters'
+import { formatCurrency } from '@/utils/formatters'
 import Button from '@/components/UI/Button.vue'
 import Card from '@/components/UI/Card.vue'
 import Input from '@/components/UI/Input.vue'
 import Select from '@/components/UI/Select.vue'
 import Icon from '@/components/UI/Icon.vue'
 import CreateCategory from './CreateCategory.vue'
-import EditCategory from './EditCategory.vue'
+
+const router = useRouter()
 
 const { 
   paginatedCategoriesWithAmount,
@@ -260,9 +254,7 @@ const {
   totalPages,
   paginationInfo,
   removeCategory,
-  setTypeFilter,
   clearFilters,
-  setPage,
   nextPage,
   prevPage,
   firstPage,
@@ -290,8 +282,6 @@ const itemsPerPageOptions = [
 ]
 
 const showCreateForm = ref(false)
-const showEditForm = ref(false)
-const selectedCategory = ref(null)
 const windowWidth = ref(window.innerWidth)
 
 /**
@@ -327,8 +317,7 @@ const openCreateForm = () => {
 }
 
 const handleEdit = (category) => {
-  selectedCategory.value = category
-  showEditForm.value = true
+  router.push(`/categories/${category.id}`)
 }
 
 const handleDelete = async (category) => {
@@ -337,9 +326,5 @@ const handleDelete = async (category) => {
 
 const handleCreated = () => {
   showCreateForm.value = false
-}
-
-const handleUpdated = () => {
-  showEditForm.value = false
 }
 </script>

@@ -99,6 +99,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCategories } from '@/composables/useCategories'
 import { validateCategoryData } from '@/modules/categories'
 import Button from '@/components/UI/Button.vue'
@@ -107,6 +108,7 @@ import Input from '@/components/UI/Input.vue'
 import Icon from '@/components/UI/Icon.vue'
 
 const emit = defineEmits(['close', 'created'])
+const router = useRouter()
 
 const { createCategory } = useCategories()
 
@@ -160,9 +162,12 @@ const handleSubmit = async () => {
   errors.value = { name: null, type: null }
 
   try {
-    await createCategory(form.value)
+    const newCategory = await createCategory(form.value)
     emit('created')
     emit('close')
+    
+    // Redirigir a la página de gestión de la categoría recién creada
+    router.push(`/categories/${newCategory.id}`)
   } catch (error) {
     // El error ya se muestra en el composable
     errors.value.name = error.message

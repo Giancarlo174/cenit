@@ -11,6 +11,7 @@ import ResetPassword from '@/views/auth/ResetPassword.vue'
 // Views - App
 import Dashboard from '@/views/dashboard/Dashboard.vue'
 import CategoriesList from '@/views/categories/CategoriesList.vue'
+import EditCategory from '@/views/categories/EditCategory.vue'
 import TransactionsList from '@/views/transactions/TransactionsList.vue'
 import ProfileSettings from '@/views/profile/ProfileSettings.vue'
 
@@ -60,6 +61,12 @@ const routes = [
     path: '/categories',
     name: 'CategoriesList',
     component: CategoriesList,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/categories/:id',
+    name: 'EditCategory',
+    component: EditCategory,
     meta: { requiresAuth: true }
   },
   {

@@ -161,57 +161,97 @@
         hover
         class="hover-card"
       >
-        <div class="flex flex-col min-[330px]:flex-row items-start justify-between gap-3">
-          <!-- Contenido izquierdo: Ícono + Info -->
-          <div class="flex flex-col min-[330px]:flex-row items-start gap-3 flex-1 w-full min-[330px]:w-auto">
+        <div class="flex flex-col gap-3">
+          <!-- Primera fila: Ícono + Info + Monto -->
+          <div class="flex items-start gap-3">
             <!-- Ícono -->
             <div :class="[
-              'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0',
+              'w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0',
               transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
             ]">
               <Icon 
                 :name="transaction.type === 'income' ? 'mdi:cash-plus' : 'mdi:cash-minus'" 
-                :size="24" 
-                :class="transaction.type === 'income' ? 'text-green-600' : 'text-red-600'"
+                :size="20" 
+                :class="[
+                  'sm:w-6 sm:h-6',
+                  transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                ]"
               />
             </div>
             
-            <!-- Info (Nombre + Fecha) -->
+            <!-- Info (Nombre + Fecha + Monto en mobile pequeño) -->
             <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-gray-900 break-words word-break">
+              <h3 class="font-semibold text-sm sm:text-base text-gray-900 break-words leading-snug">
                 {{ transaction.name || 'Sin nombre' }}
               </h3>
-              <p class="text-sm text-gray-500 mt-1">
+              <p class="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
                 {{ formatDate(transaction.transactionDate) }}
               </p>
+              
+              <!-- Monto debajo del texto (solo en mobile muy pequeño < 344px) -->
+              <p :class="[
+                'min-[344px]:hidden text-lg font-bold mt-2',
+                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+              ]">
+                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+              </p>
             </div>
-          </div>
-          
-          <!-- Contenido derecho: Monto + Botones Edit/Delete -->
-          <div class="flex flex-col min-[400px]:flex-row items-start gap-1 w-full min-[330px]:w-auto min-[330px]:items-start">
-            <p :class="[
-              'text-lg font-bold min-[330px]:text-xl',
-              transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-            ]">
-              {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
-            </p>
             
-            <div class="flex gap-0">
+            <!-- Monto + Botones (Desktop >= 640px) -->
+            <div class="hidden sm:flex items-center gap-2 flex-shrink-0">
+              <p :class="[
+                'text-lg font-bold whitespace-nowrap',
+                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+              ]">
+                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+              </p>
+              
               <Button
                 variant="ghost"
                 icon="mdi:pencil"
                 :icon-size="18"
                 @click="handleEdit(transaction)"
-                class="flex-shrink-0 text-purple-600 hover:bg-purple-50 p-1"
+                class="p-1.5 !text-purple-600 !hover:bg-purple-50 !focus:ring-purple-500"
+                title="Editar transacción"
               />
               <Button
                 variant="ghost"
                 icon="mdi:delete"
                 :icon-size="18"
                 @click="handleDelete(transaction)"
-                class="flex-shrink-0 text-red-600 hover:bg-red-50 p-1"
+                class="p-1.5 !text-red-600 !hover:bg-red-50 !focus:ring-red-500"
+                title="Eliminar transacción"
               />
             </div>
+            
+            <!-- Monto a la derecha (Mobile >= 344px y < 640px) -->
+            <div class="hidden min-[344px]:flex sm:hidden flex-shrink-0">
+              <p :class="[
+                'text-base font-bold whitespace-nowrap',
+                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+              ]">
+                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+              </p>
+            </div>
+          </div>
+          
+          <!-- Segunda fila: Botones Edit/Delete (solo en mobile < 640px) -->
+          <div class="flex flex-col min-[344px]:flex-row sm:hidden gap-2">
+            <button
+              @click="handleEdit(transaction)"
+              class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium transition-colors shadow-sm hover:shadow-md border border-purple-200"
+            >
+              <Icon name="mdi:pencil" :size="18" />
+              <span>Editar</span>
+            </button>
+            
+            <button
+              @click="handleDelete(transaction)"
+              class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-medium transition-colors shadow-sm hover:shadow-md border border-red-200"
+            >
+              <Icon name="mdi:delete" :size="18" />
+              <span>Eliminar</span>
+            </button>
           </div>
         </div>
       </Card>

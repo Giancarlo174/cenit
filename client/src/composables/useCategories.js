@@ -8,6 +8,8 @@ import { getAll } from '@/services/categories/getAll'
 import { create } from '@/services/categories/create'
 import { deleteCategory } from '@/services/categories/delete'
 import { updateCategory } from '@/services/categories/update'
+import { getUncategorized } from '@/services/transactions/getUncategorized'
+import { assignCategory } from '@/services/transactions/assignCategory'
 import { showSuccess, showError, confirmDelete } from '@/modules/notifications'
 import { getIncomeCategories, getExpenseCategories } from '@/modules/categories'
 import { useAuth } from '@/composables/useAuth'
@@ -235,6 +237,80 @@ export function useCategories() {
   }
 
   /**
+   * Obtiene transacciones sin categoría de un tipo específico
+   * @param {string} type - Tipo de transacción ('income' | 'expense')
+   * @returns {Promise<Array>} Lista de transacciones sin categoría
+   */
+  const fetchUncategorizedTransactions = async (type) => {
+    if (!userId.value) return []
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const uncategorized = await getUncategorized(userId.value, type)
+      return uncategorized
+    } catch (err) {
+      error.value = err.message
+      await showError(err.message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Asigna una transacción a una categoría
+   * @param {string} transactionId - ID de la transacción
+   * @param {string} categoryId - ID de la categoría
+   */
+  const assignTransactionToCategory = async (transactionId, categoryId) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await assignCategory(transactionId, categoryId)
+      
+      // Actualizar estado de transacciones
+      const { fetchTransactions } = useTransactions()
+      await fetchTransactions()
+      
+      invalidateDashboardCache()
+    } catch (err) {
+      error.value = err.message
+      await showError(err.message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Remueve una transacción de su categoría (category_id = null)
+   * @param {string} transactionId - ID de la transacción
+   */
+  const removeTransactionFromCategory = async (transactionId) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await assignCategory(transactionId, null)
+      
+      // Actualizar estado de transacciones
+      const { fetchTransactions } = useTransactions()
+      await fetchTransactions()
+      
+      invalidateDashboardCache()
+    } catch (err) {
+      error.value = err.message
+      await showError(err.message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * Establece el filtro por tipo
    * @param {'income' | 'expense' | null} type - Tipo a filtrar
    */
@@ -370,6 +446,9 @@ export function useCategories() {
     setTypeFilter,
     clearFilters,
     calculateCategoryAmount,
+    fetchUncategorizedTransactions,
+    assignTransactionToCategory,
+    removeTransactionFromCategory,
     
     // Métodos - Paginación
     setPage,

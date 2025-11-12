@@ -38,7 +38,12 @@ export const apiClient = {
 
     // Aplicar filtros
     Object.entries(filters).forEach(([key, value]) => {
-      query = query.eq(key, value)
+      // Si el valor es null, usar .is() en lugar de .eq()
+      if (value === null) {
+        query = query.is(key, null)
+      } else {
+        query = query.eq(key, value)
+      }
     })
 
     // Aplicar ordenamiento
