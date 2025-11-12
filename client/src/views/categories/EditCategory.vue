@@ -120,48 +120,84 @@
             hover
             class="hover-card"
           >
-            <div class="flex flex-col min-[330px]:flex-row items-center justify-between gap-3">
-              <!-- Contenido izquierdo: Ícono + Info -->
-              <div class="flex flex-col min-[330px]:flex-row items-center gap-3 flex-1 w-full min-[330px]:w-auto">
+            <div class="flex flex-col gap-3">
+              <!-- Primera fila: Ícono + Info + Monto -->
+              <div class="flex items-start gap-3">
                 <!-- Ícono -->
                 <div :class="[
-                  'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0',
+                  'w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0',
                   category.type === 'income' ? 'bg-green-100' : 'bg-red-100'
                 ]">
                   <Icon 
                     :name="category.type === 'income' ? 'mdi:cash-plus' : 'mdi:cash-minus'" 
-                    :size="24" 
-                    :class="category.type === 'income' ? 'text-green-600' : 'text-red-600'"
+                    :size="20" 
+                    :class="[
+                      'sm:w-6 sm:h-6',
+                      category.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    ]"
                   />
                 </div>
                 
-                <!-- Info (Nombre + Fecha) -->
-                <div class="flex-1 min-w-0 text-center min-[330px]:text-left">
-                  <h3 class="font-semibold text-gray-900 break-words">
+                <!-- Info (Nombre + Fecha + Monto en mobile pequeño) -->
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-sm sm:text-base text-gray-900 break-words leading-snug">
                     {{ transaction.name || 'Sin nombre' }}
                   </h3>
-                  <p class="text-sm text-gray-500 mt-1">
+                  <p class="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
                     {{ formatDate(transaction.transactionDate) }}
+                  </p>
+                  
+                  <!-- Monto debajo del texto (solo en mobile muy pequeño < 344px) -->
+                  <p :class="[
+                    'min-[344px]:hidden text-lg font-bold mt-2',
+                    category.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  ]">
+                    {{ category.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                  </p>
+                </div>
+                
+                <!-- Monto + Botón Agregar (Desktop >= 640px) -->
+                <div class="hidden sm:flex items-center gap-2 flex-shrink-0">
+                  <p :class="[
+                    'text-lg font-bold whitespace-nowrap',
+                    category.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  ]">
+                    {{ category.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                  </p>
+                  
+                  <Button
+                    variant="primary"
+                    icon="mdi:plus"
+                    @click="addTransaction(transaction)"
+                    :loading="loadingAssign && selectedTransactionId === transaction.id"
+                    size="sm"
+                    class="flex-shrink-0"
+                    title="Agregar a categoría"
+                  >
+                    Agregar
+                  </Button>
+                </div>
+                
+                <!-- Monto a la derecha (Mobile >= 344px y < 640px) -->
+                <div class="hidden min-[344px]:flex sm:hidden flex-shrink-0">
+                  <p :class="[
+                    'text-base font-bold whitespace-nowrap',
+                    category.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  ]">
+                    {{ category.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
                   </p>
                 </div>
               </div>
               
-              <!-- Contenido derecho: Monto + Botón Agregar -->
-              <div class="flex flex-col min-[430px]:flex-row items-center gap-4 w-full min-[330px]:w-auto">
-                <p :class="[
-                  'text-lg font-bold min-[330px]:text-xl leading-none',
-                  category.type === 'income' ? 'text-green-600' : 'text-red-600'
-                ]">
-                  {{ category.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
-                </p>
-                
+              <!-- Segunda fila: Botón Agregar (solo en mobile < 640px) -->
+              <div class="flex sm:hidden">
                 <Button
                   variant="primary"
                   icon="mdi:plus"
                   @click="addTransaction(transaction)"
                   :loading="loadingAssign && selectedTransactionId === transaction.id"
-                  size="sm"
-                  class="flex-shrink-0 w-full min-[430px]:w-auto"
+                  class="flex-1"
+                  title="Agregar a categoría"
                 >
                   Agregar
                 </Button>
@@ -228,48 +264,84 @@
             hover
             class="hover-card"
           >
-            <div class="flex flex-col min-[330px]:flex-row items-center justify-between gap-3">
-              <!-- Contenido izquierdo: Ícono + Info -->
-              <div class="flex flex-col min-[330px]:flex-row items-center gap-3 flex-1 w-full min-[330px]:w-auto">
+            <div class="flex flex-col gap-3">
+              <!-- Primera fila: Ícono + Info + Monto -->
+              <div class="flex items-start gap-3">
                 <!-- Ícono -->
                 <div :class="[
-                  'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0',
+                  'w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0',
                   category.type === 'income' ? 'bg-green-100' : 'bg-red-100'
                 ]">
                   <Icon 
                     :name="category.type === 'income' ? 'mdi:cash-plus' : 'mdi:cash-minus'" 
-                    :size="24" 
-                    :class="category.type === 'income' ? 'text-green-600' : 'text-red-600'"
+                    :size="20" 
+                    :class="[
+                      'sm:w-6 sm:h-6',
+                      category.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    ]"
                   />
                 </div>
                 
-                <!-- Info (Nombre + Fecha) -->
-                <div class="flex-1 min-w-0 text-center min-[330px]:text-left">
-                  <h3 class="font-semibold text-gray-900 break-words">
+                <!-- Info (Nombre + Fecha + Monto en mobile pequeño) -->
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-sm sm:text-base text-gray-900 break-words leading-snug">
                     {{ transaction.name || 'Sin nombre' }}
                   </h3>
-                  <p class="text-sm text-gray-500 mt-1">
+                  <p class="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
                     {{ formatDate(transaction.transactionDate) }}
+                  </p>
+                  
+                  <!-- Monto debajo del texto (solo en mobile muy pequeño < 344px) -->
+                  <p :class="[
+                    'min-[344px]:hidden text-lg font-bold mt-2',
+                    category.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  ]">
+                    {{ category.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                  </p>
+                </div>
+                
+                <!-- Monto + Botón Quitar (Desktop >= 640px) -->
+                <div class="hidden sm:flex items-center gap-2 flex-shrink-0">
+                  <p :class="[
+                    'text-lg font-bold whitespace-nowrap',
+                    category.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  ]">
+                    {{ category.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                  </p>
+                  
+                  <Button
+                    variant="danger"
+                    icon="mdi:minus"
+                    @click="removeTransaction(transaction)"
+                    :loading="loadingRemove && selectedTransactionId === transaction.id"
+                    size="sm"
+                    class="flex-shrink-0"
+                    title="Quitar de categoría"
+                  >
+                    Quitar
+                  </Button>
+                </div>
+                
+                <!-- Monto a la derecha (Mobile >= 344px y < 640px) -->
+                <div class="hidden min-[344px]:flex sm:hidden flex-shrink-0">
+                  <p :class="[
+                    'text-base font-bold whitespace-nowrap',
+                    category.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  ]">
+                    {{ category.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
                   </p>
                 </div>
               </div>
               
-              <!-- Contenido derecho: Monto + Botón Quitar -->
-              <div class="flex flex-col min-[430px]:flex-row items-center gap-4 w-full min-[330px]:w-auto">
-                <p :class="[
-                  'text-lg font-bold min-[330px]:text-xl leading-none',
-                  category.type === 'income' ? 'text-green-600' : 'text-red-600'
-                ]">
-                  {{ category.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
-                </p>
-                
+              <!-- Segunda fila: Botón Quitar (solo en mobile < 640px) -->
+              <div class="flex sm:hidden">
                 <Button
                   variant="danger"
                   icon="mdi:minus"
                   @click="removeTransaction(transaction)"
                   :loading="loadingRemove && selectedTransactionId === transaction.id"
-                  size="sm"
-                  class="flex-shrink-0 w-full min-[430px]:w-auto"
+                  class="flex-1"
+                  title="Quitar de categoría"
                 >
                   Quitar
                 </Button>
