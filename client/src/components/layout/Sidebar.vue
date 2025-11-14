@@ -111,9 +111,23 @@
 
     <!-- Footer Info -->
     <div class="sidebar-footer">
-      <div class="flex items-center gap-2 text-xs text-gray-500">
-        <Icon name="mdi:shield-check" :size="16" class="text-green-600" />
-        <span>Datos seguros</span>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2 text-xs text-gray-500">
+          <Icon name="mdi:shield-check" :size="16" class="text-green-600" />
+          <span>Datos seguros</span>
+        </div>
+        <div class="text-xs text-gray-500 text-left">
+          © 2025 - <a 
+            href="https://giancarlosantillana.vercel.app/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="shine-animation font-bold text-gray-900 hover:text-purple-600 transition-colors underline decoration-1 underline-offset-2"
+          >
+            Giancarlo Santillana
+          </a>
+          <br />
+          Todos los derechos reservados.
+        </div>
       </div>
     </div>
   </aside>
