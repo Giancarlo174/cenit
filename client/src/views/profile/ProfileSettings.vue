@@ -69,7 +69,7 @@
                 id="currentPassword"
                 v-model="passwordForm.currentPassword"
                 :type="showCurrentPassword ? 'text' : 'password'"
-                placeholder="Ingresa tu contraseña actual"
+                placeholder="Ingresa contraseña actual"
                 required
                 :disabled="loadingPassword"
               >
@@ -97,7 +97,7 @@
                 id="newPassword"
                 v-model="passwordForm.newPassword"
                 :type="showNewPassword ? 'text' : 'password'"
-                placeholder="Ingresa tu nueva contraseña"
+                placeholder="Ingresa nueva contraseña"
                 required
                 :disabled="loadingPassword"
               >
@@ -128,7 +128,7 @@
                 id="confirmPassword"
                 v-model="passwordForm.confirmPassword"
                 :type="showConfirmPassword ? 'text' : 'password'"
-                placeholder="Confirma tu nueva contraseña"
+                placeholder="Confirma nueva contraseña"
                 required
                 :disabled="loadingPassword"
               >

@@ -42,6 +42,25 @@
   @apply -translate-y-2 shadow-lg;
 }
 
+/* Drag indicator en modo reorder */
+.drag-indicator {
+  @apply absolute top-2 right-2 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center;
+}
+
+/* Grid en modo reordenamiento */
+.reorder-mode .category-card {
+  @apply cursor-move;
+}
+
+/* Estados de Sortable.js */
+.category-ghost {
+  @apply opacity-40;
+}
+
+.category-drag {
+  @apply rotate-3 scale-105 shadow-2xl;
+}
+
 /* Sidebar Layout */
 .sidebar {
   position: fixed;
@@ -114,7 +133,7 @@
 }
 
 .nav-item:hover {
-  background-color: #f9fafb;
+  background-color: #faf5ff;
 }
 
 .nav-item-active {
@@ -142,6 +161,12 @@
 .nav-item:hover .nav-item-icon {
   background-color: #f3e8ff;
   color: #9333ea;
+}
+
+/* Excepción para botón de cerrar sesión - mantener rojo */
+.nav-item-logout:hover .nav-item-icon {
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 .nav-item-content {

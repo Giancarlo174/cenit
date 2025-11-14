@@ -8,17 +8,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.0",
-    "@supabase/supabase-js": "^2.39.7",
     "@iconify/vue": "^4.1.1",
-    "sweetalert2": "^11.10.5"
+    "@supabase/supabase-js": "^2.39.7",
+    "sortablejs": "^1.15.6",
+    "sweetalert2": "^11.10.5",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.1.4",
-    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.4.17",
     "postcss": "^8.4.35",
-    "autoprefixer": "^10.4.17"
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.4"
   }
 }

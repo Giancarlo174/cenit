@@ -13,6 +13,10 @@
         :placeholder="placeholder"
         :disabled="disabled"
         :required="required"
+        :maxlength="maxlength"
+        :min="min"
+        :max="max"
+        :step="step"
         :class="inputClasses"
         @input="handleInput"
         @blur="handleBlur"
@@ -73,6 +77,22 @@ const props = defineProps({
   id: {
     type: String,
     default: () => `input-${Math.random().toString(36).substr(2, 9)}`
+  },
+  maxlength: {
+    type: Number,
+    default: null
+  },
+  min: {
+    type: Number,
+    default: null
+  },
+  max: {
+    type: Number,
+    default: null
+  },
+  step: {
+    type: String,
+    default: null
   }
 })
 

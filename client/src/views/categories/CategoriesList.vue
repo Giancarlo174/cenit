@@ -7,17 +7,68 @@
         <p class="text-sm sm:text-base text-gray-600 mt-1">Gestiona las categorías de tus ingresos y gastos</p>
       </div>
       
-      <Button
-        icon="mdi:plus"
-        @click="openCreateForm"
-        class="flex-shrink-0 w-full sm:w-auto mt-3 sm:mt-0"
-      >
-        Nueva Categoría
-      </Button>
+      <div class="flex gap-2 flex-shrink-0 w-full sm:w-auto mt-3 sm:mt-0">
+        <!-- Botón Reordenar (solo visible cuando NO está en modo reorder) -->
+        <Button
+          v-if="!isReorderMode && hasCategories"
+          icon="mdi:drag"
+          variant="secondary"
+          @click="handleEnableReorder"
+          class="flex-1 sm:flex-initial"
+        >
+          Reordenar
+        </Button>
+        
+        <!-- Botón Nueva Categoría -->
+        <Button
+          v-if="!isReorderMode"
+          icon="mdi:plus"
+          @click="openCreateForm"
+          class="flex-1 sm:flex-initial"
+        >
+          Nueva Categoría
+        </Button>
+      </div>
     </div>
 
+    <!-- Banner de Modo Reordenamiento -->
+    <Card v-if="isReorderMode" class="mb-6 border-2 border-purple-500">
+      <div class="flex flex-col sm:flex-row items-center gap-4">
+        <div class="flex items-center gap-3 flex-1">
+          <Icon name="mdi:information" :size="24" class="text-purple-600" />
+          <div>
+            <p class="font-semibold text-gray-900">Modo de reordenamiento activo</p>
+            <p class="text-sm text-gray-600">Arrastra las categorías para cambiar su orden</p>
+          </div>
+        </div>
+        
+        <div class="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="secondary"
+            icon="mdi:close"
+            @click="handleCancelReorder"
+            :disabled="isSavingOrder"
+            class="flex-1 sm:flex-initial"
+          >
+            Cancelar
+          </Button>
+          
+          <Button
+            variant="success"
+            icon="mdi:content-save"
+            @click="handleSaveOrder"
+            :loading="isSavingOrder"
+            :disabled="!hasOrderChanges || isSavingOrder"
+            class="flex-1 sm:flex-initial"
+          >
+            {{ hasOrderChanges ? 'Guardar Orden' : 'Sin Cambios' }}
+          </Button>
+        </div>
+      </div>
+    </Card>
+
     <!-- Buscador y Filtros -->
-    <Card v-if="hasCategories" class="mb-6">
+    <Card v-if="hasCategories && !isReorderMode" class="mb-6">
       <div class="flex flex-col gap-4">
         <!-- Primera fila: Buscador -->
         <div class="w-full">
@@ -25,6 +76,7 @@
             v-model="searchTerm"
             type="text"
             :placeholder="searchPlaceholder"
+            :disabled="!canFilter"
           />
         </div>
         
@@ -39,6 +91,7 @@
               placeholder="Tipo"
               value-key="value"
               label-key="label"
+              :disabled="!canFilter"
             />
           </div>
           
@@ -51,6 +104,7 @@
               placeholder="Ordenar"
               value-key="value"
               label-key="label"
+              :disabled="!canFilter"
             />
           </div>
           
@@ -60,6 +114,7 @@
               variant="secondary"
               icon="mdi:filter-remove"
               @click="clearFilters"
+              :disabled="!canFilter"
               class="w-full sm:w-auto"
             >
               Limpiar Filtros
@@ -82,14 +137,27 @@
     </Card>
 
     <!-- Galería de Categorías -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div 
+      v-else 
+      ref="categoriesGridRef"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+      :class="{ 'reorder-mode': isReorderMode }"
+    >
       <Card
         v-for="category in paginatedCategoriesWithAmount"
         :key="category.id"
-        hover
-        class="category-card"
+        :hover="!isReorderMode"
+        :class="[
+          'category-card relative',
+          { 'cursor-move': isReorderMode, 'cursor-pointer': !isReorderMode }
+        ]"
       >
         <div class="flex flex-col items-center text-center p-2">
+          <!-- Indicador de drag (solo en modo reorder) -->
+          <div v-if="isReorderMode" class="drag-indicator">
+            <Icon name="mdi:drag" :size="20" class="text-gray-400" />
+          </div>
+          
           <!-- Ícono grande centrado -->
           <div :class="[
             'w-16 h-16 rounded-xl flex items-center justify-center mb-4',
@@ -117,8 +185,8 @@
             </p>
           </div>
           
-          <!-- Botones Edit/Delete - Siempre stack en columna para mejor adaptabilidad -->
-          <div class="flex flex-col gap-2 w-full">
+          <!-- Botones Edit/Delete (ocultos en modo reorder) -->
+          <div v-if="!isReorderMode" class="flex flex-col gap-2 w-full">
             <!-- Botón Editar -->
             <button
               @click="handleEdit(category)"
@@ -142,7 +210,7 @@
     </div>
 
     <!-- Paginación -->
-    <Card v-if="hasCategories && totalPages > 0" class="mt-6">
+    <Card v-if="hasCategories && totalPages > 0 && !isReorderMode" class="mt-6">
       <div class="flex flex-col gap-4">
         <!-- Información de paginación -->
         <div class="text-sm text-gray-600 text-center sm:text-left">
@@ -229,7 +297,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCategories } from '@/composables/useCategories'
 import { formatCurrency } from '@/utils/formatters'
@@ -239,6 +307,7 @@ import Input from '@/components/UI/Input.vue'
 import Select from '@/components/UI/Select.vue'
 import Icon from '@/components/UI/Icon.vue'
 import CreateCategory from './CreateCategory.vue'
+import Sortable from 'sortablejs'
 
 const router = useRouter()
 
@@ -259,7 +328,16 @@ const {
   prevPage,
   firstPage,
   lastPage,
-  setItemsPerPage
+  setItemsPerPage,
+  // Drag-and-drop
+  isReorderMode,
+  isSavingOrder,
+  hasOrderChanges,
+  canFilter,
+  enableReorderMode,
+  cancelReorderMode,
+  updateLocalOrder,
+  saveOrder
 } = useCategories()
 
 // Opciones para el select de tipo
@@ -283,6 +361,8 @@ const itemsPerPageOptions = [
 
 const showCreateForm = ref(false)
 const windowWidth = ref(window.innerWidth)
+const categoriesGridRef = ref(null)
+let sortableInstance = null
 
 /**
  * Actualiza el ancho de la ventana cuando se redimensiona
@@ -303,6 +383,66 @@ const searchPlaceholder = computed(() => {
   return 'Buscar categoría por nombre...'
 })
 
+/**
+ * Inicializa Sortable.js cuando entra en modo reordenamiento
+ */
+const initSortable = () => {
+  if (!categoriesGridRef.value || sortableInstance) return
+
+  sortableInstance = new Sortable(categoriesGridRef.value, {
+    animation: 200,
+    handle: '.category-card',
+    ghostClass: 'category-ghost',
+    dragClass: 'category-drag',
+    onEnd: (event) => {
+      updateLocalOrder(event.oldIndex, event.newIndex)
+    }
+  })
+}
+
+/**
+ * Destruye la instancia de Sortable.js
+ */
+const destroySortable = () => {
+  if (sortableInstance) {
+    sortableInstance.destroy()
+    sortableInstance = null
+  }
+}
+
+/**
+ * Activa el modo de reordenamiento
+ */
+const handleEnableReorder = () => {
+  enableReorderMode()
+  nextTick(() => {
+    initSortable()
+  })
+}
+
+/**
+ * Cancela el modo de reordenamiento
+ */
+const handleCancelReorder = () => {
+  destroySortable()
+  cancelReorderMode()
+}
+
+/**
+ * Guarda el orden
+ */
+const handleSaveOrder = async () => {
+  await saveOrder()
+  destroySortable()
+}
+
+// Watch para destruir Sortable cuando sale del modo reordenamiento
+watch(isReorderMode, (newValue) => {
+  if (!newValue) {
+    destroySortable()
+  }
+})
+
 // Escuchar cambios en el tamaño de ventana
 onMounted(() => {
   window.addEventListener('resize', updateWindowWidth)
@@ -310,6 +450,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateWindowWidth)
+  destroySortable()
 })
 
 const openCreateForm = () => {

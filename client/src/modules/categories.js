@@ -54,7 +54,8 @@ export const transformDataForDB = (data, userId) => {
   return {
     user_id: userId,
     name: data.name.trim(),
-    type: data.type
+    type: data.type,
+    position: 1 // Nuevas categorías siempre en posición 1
   }
 }
 
@@ -69,6 +70,7 @@ export const transformDataFromDB = (dbData) => {
     userId: dbData.user_id,
     name: dbData.name,
     type: dbData.type,
+    position: dbData.position,
     createdAt: dbData.created_at
   }
 }

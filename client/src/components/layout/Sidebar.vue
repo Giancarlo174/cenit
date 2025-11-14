@@ -91,7 +91,7 @@
       <!-- Botón de Logout -->
       <button
         @click="handleLogout"
-        class="nav-item text-left w-full hover:bg-red-50"
+        class="nav-item nav-item-logout text-left w-full hover:bg-red-50"
         :disabled="loading"
       >
         <div class="nav-item-icon text-red-600">

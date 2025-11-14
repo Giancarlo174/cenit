@@ -7,7 +7,8 @@
 export const VALIDATION_RULES = {
   MIN_NAME_LENGTH: 3,
   MAX_NAME_LENGTH: 30,
-  MIN_AMOUNT: 0.01
+  MIN_AMOUNT: 0.01,
+  MAX_AMOUNT: 99999999.99 // DECIMAL(10,2) = 8 dígitos + 2 decimales
 }
 
 /**
@@ -25,6 +26,10 @@ export const validateTransactionData = (data) => {
 
   if (!data.amount || data.amount <= 0) {
     errors.push('El monto debe ser mayor a 0')
+  }
+
+  if (data.amount > VALIDATION_RULES.MAX_AMOUNT) {
+    errors.push(`El monto no puede exceder $${VALIDATION_RULES.MAX_AMOUNT.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
   }
 
   if (!data.type || !['income', 'expense'].includes(data.type)) {

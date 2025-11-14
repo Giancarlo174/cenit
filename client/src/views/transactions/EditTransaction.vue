@@ -13,6 +13,7 @@
         type="number"
         step="0.01"
         min="0.01"
+        max="99999999.99"
         label="Monto"
         placeholder="0.00"
         required

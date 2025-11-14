@@ -36,12 +36,17 @@ export const showError = async (message) => {
 /**
  * Muestra un diálogo de confirmación para eliminar
  * @param {string} itemName - Nombre del item a eliminar
+ * @param {string} extraInfo - Información adicional opcional
  * @returns {Promise<boolean>} true si confirma, false si cancela
  */
-export const confirmDelete = async (itemName) => {
+export const confirmDelete = async (itemName, extraInfo = null) => {
   const result = await Swal.fire({
     title: '¿Estás seguro?',
     text: `Se eliminará "${itemName}" de forma permanente`,
+    html: extraInfo ? `
+      <p style="margin-bottom: 12px;">Se eliminará <strong>"${itemName}"</strong> de forma permanente</p>
+      <p style="margin-bottom: 12px;">${extraInfo}</p>
+    ` : undefined,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#dc2626',

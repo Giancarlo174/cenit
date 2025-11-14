@@ -387,6 +387,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 import { useCategories } from '@/composables/useCategories'
 import { useTransactions } from '@/composables/useTransactions'
 import { validateCategoryData } from '@/modules/categories'
@@ -402,12 +403,15 @@ const router = useRouter()
 
 const { 
   categories,
+  fetchCategories,
   updateCategoryData,
   fetchUncategorizedTransactions,
   assignTransactionToCategory,
-  removeTransactionFromCategory
+  removeTransactionFromCategory,
+    loading
 } = useCategories()
 
+const { userId } = useAuth()
 const { transactions } = useTransactions()
 
 // Estado de la categoría actual
@@ -680,6 +684,31 @@ onMounted(async () => {
     await showError('ID de categoría no válido')
     goBack()
     return
+  }
+
+  // Esperar a que userId esté disponible (máximo 5 segundos)
+  let waitCount = 0
+  while (!userId.value && waitCount < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100))
+    waitCount++
+  }
+
+  if (!userId.value) {
+    await showError('Error de autenticación. Por favor, inicia sesión nuevamente.')
+    router.push('/login')
+    return
+  }
+
+  // Si no hay categorías cargadas, cargarlas primero
+  if (categories.value.length === 0) {
+    try {
+      await fetchCategories()
+    } catch (error) {
+      console.error('Error al cargar categorías:', error)
+      await showError('Error al cargar las categorías')
+      goBack()
+      return
+    }
   }
 
   // Buscar la categoría en el estado global

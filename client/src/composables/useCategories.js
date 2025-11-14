@@ -8,6 +8,7 @@ import { getAll } from '@/services/categories/getAll'
 import { create } from '@/services/categories/create'
 import { deleteCategory } from '@/services/categories/delete'
 import { updateCategory } from '@/services/categories/update'
+import { bulkUpdateOrder } from '@/services/categories/bulkUpdateOrder'
 import { getUncategorized } from '@/services/transactions/getUncategorized'
 import { assignCategory } from '@/services/transactions/assignCategory'
 import { showSuccess, showError, confirmDelete } from '@/modules/notifications'
@@ -25,6 +26,12 @@ const selectedType = ref(null) // 'income' | 'expense' | null (todas)
 const sortOrder = ref(null) // 'asc' (A-Z) | 'desc' (Z-A) | null (sin orden)
 const currentPage = ref(1)
 const itemsPerPage = ref(15)
+
+// Estado para drag-and-drop
+const isReorderMode = ref(false) // Modo de reordenamiento activo
+const localCategoriesOrder = ref([]) // Orden local temporal
+const isSavingOrder = ref(false) // Guardando orden en la BD
+
 let hasInitialized = false
 
 export function useCategories() {
@@ -66,7 +73,8 @@ export function useCategories() {
       )
     }
 
-    // Ordenar por monto si está seleccionado
+    // IMPORTANTE: Si hay orden por monto, usar ese
+    // Si NO hay orden por monto, ordenar por position (orden manual)
     if (sortOrder.value) {
       filtered = [...filtered].sort((a, b) => {
         const amountA = calculateCategoryAmount(a.id)
@@ -78,6 +86,9 @@ export function useCategories() {
           return amountA - amountB // Menor a mayor
         }
       })
+    } else {
+      // Orden por position (manual del usuario)
+      filtered = [...filtered].sort((a, b) => a.position - b.position)
     }
 
     return filtered
@@ -181,7 +192,10 @@ export function useCategories() {
    * @param {Object} category - Categoría a eliminar
    */
   const removeCategory = async (category) => {
-    const confirmed = await confirmDelete(category.name)
+    const confirmed = await confirmDelete(
+      category.name,
+      'Las transacciones de esta categoría no serán eliminadas'
+    )
     if (!confirmed) return
 
     loading.value = true
@@ -382,6 +396,98 @@ export function useCategories() {
     currentPage.value = 1
   }
 
+  /**
+   * Activa el modo de reordenamiento
+   */
+  const enableReorderMode = () => {
+    // Guardar el orden actual como backup
+    localCategoriesOrder.value = categories.value.map(c => c.id)
+    isReorderMode.value = true
+    
+    // Deshabilitar filtros durante reordenamiento
+    searchTerm.value = ''
+    selectedType.value = null
+    sortOrder.value = null
+    currentPage.value = 1
+  }
+
+  /**
+   * Cancela el modo de reordenamiento sin guardar
+   */
+  const cancelReorderMode = () => {
+    isReorderMode.value = false
+    localCategoriesOrder.value = []
+    
+    // Recargar categorías para restaurar orden original
+    fetchCategories()
+  }
+
+  /**
+   * Actualiza el orden local cuando el usuario arrastra
+   * @param {number} oldIndex - Índice anterior
+   * @param {number} newIndex - Nuevo índice
+   */
+  const updateLocalOrder = (oldIndex, newIndex) => {
+    if (oldIndex === newIndex) return
+    
+    const item = categories.value.splice(oldIndex, 1)[0]
+    categories.value.splice(newIndex, 0, item)
+  }
+
+  /**
+   * Guarda el nuevo orden en la base de datos
+   */
+  const saveOrder = async () => {
+    if (!userId.value) return
+
+    isSavingOrder.value = true
+    error.value = null
+
+    try {
+      // Obtener IDs en el orden actual
+      const orderedIds = categories.value.map(c => c.id)
+      
+      // Enviar a la BD
+      await bulkUpdateOrder(orderedIds, userId.value)
+      
+      // Salir del modo reordenamiento
+      isReorderMode.value = false
+      
+      // Recargar desde DB para obtener los position actualizados
+      await fetchCategories()
+      
+      // Invalidar cache del dashboard
+      invalidateDashboardCache()
+      
+      await showSuccess('Orden guardado exitosamente')
+    } catch (err) {
+      error.value = err.message
+      await showError(err.message)
+      
+      // Recargar categorías para restaurar orden original
+      await fetchCategories()
+    } finally {
+      isSavingOrder.value = false
+    }
+  }
+
+  /**
+   * Verifica si hay cambios pendientes en el orden
+   */
+  const hasOrderChanges = computed(() => {
+    if (!isReorderMode.value) return false
+    
+    const currentOrder = categories.value.map(c => c.id).join(',')
+    const savedOrder = localCategoriesOrder.value.join(',')
+    
+    return currentOrder !== savedOrder
+  })
+
+  /**
+   * Verifica si se pueden aplicar filtros (no está en modo reordenamiento)
+   */
+  const canFilter = computed(() => !isReorderMode.value)
+
   // Watch para resetear página cuando cambien filtros
   watch([searchTerm, sortOrder], () => {
     currentPage.value = 1
@@ -428,6 +534,12 @@ export function useCategories() {
     currentPage,
     itemsPerPage,
     
+    // Estado - Reordenamiento
+    isReorderMode,
+    isSavingOrder,
+    hasOrderChanges,
+    canFilter,
+    
     // Computed - Indicadores
     hasCategories,
     hasIncomeCategories,
@@ -456,6 +568,12 @@ export function useCategories() {
     prevPage,
     firstPage,
     lastPage,
-    setItemsPerPage
+    setItemsPerPage,
+    
+    // Métodos - Reordenamiento
+    enableReorderMode,
+    cancelReorderMode,
+    updateLocalOrder,
+    saveOrder
   }
 }

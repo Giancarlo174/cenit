@@ -22,10 +22,10 @@ export const getAll = async (userId, options = {}) => {
       filters.type = options.type
     }
 
-    // Obtener categorías del usuario, ordenadas por nombre
+    // Obtener categorías ordenadas por position (orden manual del usuario)
     const data = await apiClient.getAll('categories', {
       filters,
-      orderBy: { column: 'name', ascending: true }
+      orderBy: { column: 'position', ascending: true }
     })
     
     // Transforma los datos desde la DB
