@@ -31,7 +31,7 @@
             text-anchor="middle"
             class="text-xs font-semibold fill-green-700"
           >
-            ${{ item.income }}
+            ${{ item.income.toFixed(2) }}
           </text>
 
           <!-- Expense bar (red) -->
@@ -53,7 +53,7 @@
             text-anchor="middle"
             class="text-xs font-semibold fill-red-700"
           >
-            ${{ item.expense }}
+            ${{ item.expense.toFixed(2) }}
           </text>
         </g>
 
